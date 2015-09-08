@@ -10,12 +10,10 @@ namespace UnityStandardAssets._2D
         private PlatformerCharacter2D m_Character;
         private bool m_Jump;
 
-
         private void Awake()
         {
             m_Character = GetComponent<PlatformerCharacter2D>();
         }
-
 
         private void Update()
         {
@@ -25,7 +23,6 @@ namespace UnityStandardAssets._2D
                 m_Jump = CrossPlatformInputManager.GetButtonDown("Jump");
             }
         }
-
 
         private void FixedUpdate()
         {

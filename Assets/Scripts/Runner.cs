@@ -30,7 +30,7 @@ public class Runner : MonoBehaviour
 	#endregion
 
 	#region Lane and World Info
-	public GameObject[] Cameras;
+	public Camera[] Cameras;
 	public GameObject[,] Lanes;
 	public int WorldIndex;
 	public int lane;
@@ -90,8 +90,6 @@ public class Runner : MonoBehaviour
 				//Lanes[i,j] = Cameras[i].transform.FindChild("Lane Parent").FindChild("Lane ["+j+"]").gameObject;
 			}
 		}
-
-		StepIntoLane(2);
 	}
 
 	void Update()
@@ -126,25 +124,33 @@ public class Runner : MonoBehaviour
 	public void GetInput()
 	{
 		#region L/R Lane Shifting
-		if (Input.GetKeyDown(KeyCode.LeftArrow))
+		if (Input.GetKeyDown(KeyCode.UpArrow))
 		{
-			StepLeft();
+			int newWorld = WorldIndex - 1;
+			if (newWorld == -1)
+			{
+				PhaseShift(3);
+			}
+			else
+			{
+				PhaseShift(newWorld);
+			}
 		}
-		if (Input.GetKeyDown(KeyCode.RightArrow))
+		if (Input.GetKeyDown(KeyCode.DownArrow))
 		{
-			StepRight();
+			PhaseShift((WorldIndex + 1) % 4);
 		}
 		#endregion
 
-		#region Status Effect Changing
-		if (Input.GetKey(KeyCode.UpArrow))
+		#region Speed Adjustment Effect Changing
+		if (Input.GetKey(KeyCode.LeftArrow))
 		{
 			if (speed < maxSpeed)
 			{
 				AdjustSpeed(speed);
 			}
 		}
-		if (Input.GetKey(KeyCode.DownArrow))
+		if (Input.GetKey(KeyCode.RightArrow))
 		{
 			if (speed > 2)
 			{
@@ -167,25 +173,6 @@ public class Runner : MonoBehaviour
 			{
 				ChangeStatusEffect(statusEffect - 1);
 			}
-		}
-		#endregion
-
-		#region Lane Control
-		if (Input.GetKeyDown(KeyCode.Q))
-		{
-			StepIntoLane(0);
-		}
-		if (Input.GetKeyDown(KeyCode.W))
-		{
-			StepIntoLane(1);
-		}
-		if (Input.GetKeyDown(KeyCode.E))
-		{
-			StepIntoLane(2);
-		}
-		if (Input.GetKeyDown(KeyCode.R))
-		{
-			StepIntoLane(3);
 		}
 		#endregion
 
@@ -214,37 +201,6 @@ public class Runner : MonoBehaviour
 		//Check statuses
 
 		speed += adjustment;
-	}
-
-	public void StepIntoLane(int newLane = -1)
-	{
-		if (newLane == -1)
-		{
-			newLane = lane;
-		}
-		else
-		{
-			lane = newLane;
-		}
-		//transform.position = Lanes[WorldIndex, newLane].transform.position - Vector3.forward - 4.5f * Vector3.up;
-	}
-
-	public void StepRight()
-	{
-		if (lane < 3)
-		{
-			lane++;
-		}
-		StepIntoLane(lane);
-	}
-
-	public void StepLeft()
-	{
-		if (lane > 0)
-		{
-			lane--;
-		}
-		StepIntoLane(lane);
 	}
 
 	public void ChangeStatusEffect(int newStatus)
@@ -313,10 +269,13 @@ public class Runner : MonoBehaviour
 	{
 		if (targetPlane >= 0 && targetPlane < 4)
 		{
+			Vector3 relativePos = Cameras[WorldIndex].transform.position - transform.position;
+			Debug.DrawLine(Cameras[targetPlane].transform.position, Cameras[targetPlane].transform.position + relativePos, Color.black, 15.0f);
+			Vector3 destination = Cameras[targetPlane].transform.position - relativePos;
+			transform.position = destination;
+
 			WorldIndex = targetPlane;
 
-			StepIntoLane();
-			
 			if (statusEffect != 0)
 			{
 				ChangeStatusEffect(0);

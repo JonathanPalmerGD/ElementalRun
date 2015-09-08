@@ -29,7 +29,6 @@ namespace UnityStandardAssets._2D
 			m_Rigidbody2D = GetComponent<Rigidbody2D>();
 		}
 
-
 		private void FixedUpdate()
 		{
 			m_Grounded = false;
@@ -47,7 +46,6 @@ namespace UnityStandardAssets._2D
 			// Set the vertical animation
 			m_Anim.SetFloat("vSpeed", m_Rigidbody2D.velocity.y);
 		}
-
 
 		public void Move(float move, bool crouch, bool jump)
 		{
@@ -98,7 +96,6 @@ namespace UnityStandardAssets._2D
 				m_Rigidbody2D.AddForce(new Vector2(0f, m_JumpForce));
 			}
 		}
-
 
 		private void Flip()
 		{
