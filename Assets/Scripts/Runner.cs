@@ -18,6 +18,15 @@ public class Runner : MonoBehaviour
 	public float statusLength = 0.0f;
 	public bool burning = false;
 
+	private GameObject burnedPrefab;
+	private GameObject soakedPrefab;
+	private GameObject gustedPrefab;
+	private GameObject muckedPrefab;
+
+	private GameObject burnedParticle;
+	private GameObject soakedParticle;
+	private GameObject gustedParticle;
+	private GameObject muckedParticle;
 	#endregion
 
 	#region Lane and World Info
@@ -34,12 +43,37 @@ public class Runner : MonoBehaviour
 	public Slider speedSlider;
 	#endregion
 
+	private void DisableAllParticles()
+	{
+		burnedParticle.SetActive(false);
+		soakedParticle.SetActive(false);
+		gustedParticle.SetActive(false);
+		muckedParticle.SetActive(false);
+	}
+
 	void Start()
 	{
+		burnedPrefab = Resources.Load<GameObject>("Burned");
+		soakedPrefab = Resources.Load<GameObject>("Soaked");
+		gustedPrefab = Resources.Load<GameObject>("Gusted");
+		muckedPrefab = Resources.Load<GameObject>("Mucked");
+
+		burnedParticle = GameObject.Instantiate(burnedPrefab, transform.position, Quaternion.identity) as GameObject;
+		soakedParticle = GameObject.Instantiate(soakedPrefab, transform.position, Quaternion.identity) as GameObject;
+		gustedParticle = GameObject.Instantiate(gustedPrefab, transform.position, Quaternion.identity) as GameObject;
+		muckedParticle = GameObject.Instantiate(muckedPrefab, transform.position, Quaternion.identity) as GameObject;
+
+		burnedParticle.transform.SetParent(transform);
+		soakedParticle.transform.SetParent(transform);
+		gustedParticle.transform.SetParent(transform);
+		muckedParticle.transform.SetParent(transform);
+
+		DisableAllParticles();
+
 		if (Runner.Inst == null)
 		{
 			Runner.Inst = this;
-			Debug.Log(Runner.Inst);
+			//Debug.Log(Runner.Inst);
 		}
 
 		WorldIndex = 0;
@@ -53,7 +87,7 @@ public class Runner : MonoBehaviour
 		{
 			for(int j = 0; j < 4; j++)
 			{
-				Lanes[i,j] = Cameras[i].transform.FindChild("Lane Parent").FindChild("Lane ["+j+"]").gameObject;
+				//Lanes[i,j] = Cameras[i].transform.FindChild("Lane Parent").FindChild("Lane ["+j+"]").gameObject;
 			}
 		}
 
@@ -192,7 +226,7 @@ public class Runner : MonoBehaviour
 		{
 			lane = newLane;
 		}
-		transform.position = Lanes[WorldIndex, newLane].transform.position - Vector3.forward - 4.5f * Vector3.up;
+		//transform.position = Lanes[WorldIndex, newLane].transform.position - Vector3.forward - 4.5f * Vector3.up;
 	}
 
 	public void StepRight()
@@ -215,6 +249,8 @@ public class Runner : MonoBehaviour
 
 	public void ChangeStatusEffect(int newStatus)
 	{
+		DisableAllParticles();
+
 		if (newStatus == 0)
 		{
 			statusUI.text = "";
@@ -225,23 +261,27 @@ public class Runner : MonoBehaviour
 		}
 		if (newStatus == 1)
 		{
+			burnedParticle.SetActive(true);
 			statusUI.text = "Burning";
 			burning = false;
 		}
 		if (newStatus == 2)
 		{
+			soakedParticle.SetActive(true);
 			statusUI.text = "Soaked";
 		}
 		if (newStatus == 3)
 		{
+			muckedParticle.SetActive(true);
 			statusUI.text = "Mucked";
 		}
 		if (newStatus == 4)
 		{
+			gustedParticle.SetActive(true);
 			statusUI.text = "Gusted";
 		}
 
-		Debug.Log("Status: " + statusEffect + " to " + newStatus);
+		//Debug.Log("Status: " + statusEffect + " to " + newStatus +"\n");
 		statusEffect = newStatus;
 
 	}
