@@ -5,6 +5,7 @@ using System.Collections.Generic;
 public class Spawner : MonoBehaviour
 {
 	public GameObject platformPrefab;
+	public GameObject platformLongPrefab;
 	public GameObject togglePrefab;
 	public GameObject obstaclePrefab;
 	public int worldIndex;
@@ -31,6 +32,7 @@ public class Spawner : MonoBehaviour
 	void Start() 
 	{
 		platformPrefab = Resources.Load<GameObject>("Objects/Platform");
+		platformLongPrefab = Resources.Load<GameObject>("Objects/PlatformLong");
 		togglePrefab = Resources.Load<GameObject>("Objects/Toggle");
 		obstaclePrefab = Resources.Load<GameObject>("Objects/Obstacle");
 
@@ -55,18 +57,21 @@ public class Spawner : MonoBehaviour
 		}
 	}
 
-	private void CreatePlatform()
+	private void CreatePlatform(GameObject prefab, bool tilt = true)
 	{
 		float randHeight = Random.Range(-.5f, 6.0f);
-		GameObject go = GameObject.Instantiate(platformPrefab, spawnPosition.transform.position + (Vector3.up * randHeight), Quaternion.identity) as GameObject;
+		GameObject go = GameObject.Instantiate(prefab, spawnPosition.transform.position + (Vector3.up * randHeight), Quaternion.identity) as GameObject;
 
-		if (randHeight < 3)
+		if (tilt)
 		{
-			go.transform.Rotate(Vector3.forward, Random.Range(-15, 15));
-		}
-		else
-		{
-			go.transform.Rotate(Vector3.forward, Random.Range(0, 15));
+			if (randHeight < 3)
+			{
+				go.transform.Rotate(Vector3.forward, Random.Range(-15, 15));
+			}
+			else
+			{
+				go.transform.Rotate(Vector3.forward, Random.Range(0, 15));
+			}
 		}
 
 		platforms.Add(go);
@@ -174,8 +179,26 @@ public class Spawner : MonoBehaviour
 			platformTimer -= Time.deltaTime;
 			if (platformTimer <= 0)
 			{
-				platformTimer = platformFreq / Runner.Inst.speed * 20;// +Random.Range(-0.2f, 0.7f);
-				CreatePlatform();
+				GameObject whichPlatform = platformPrefab;
+				int randCase = Random.Range(0,10);
+				if (randCase < 3)
+				{
+					whichPlatform = platformPrefab;
+					platformTimer = platformFreq / Runner.Inst.speed * 18 + Random.Range(-0.25f, 0.25f);
+					CreatePlatform(whichPlatform, true);
+				}
+				else if (randCase < 8)
+				{
+					whichPlatform = platformLongPrefab;
+					platformTimer = platformFreq / Runner.Inst.speed * 24 + Random.Range(1.25f, 2.05f);
+					CreatePlatform(whichPlatform, false);
+				}
+				else
+				{
+					platformTimer = platformFreq / Runner.Inst.speed * 18 + Random.Range(-0.25f, 0.25f);
+				}
+
+				//platformTimer = platformFreq / Runner.Inst.speed * 18 + Random.Range(-0.25f, 0.25f);
 			}
 
 			toggleTimer -= Time.deltaTime;
