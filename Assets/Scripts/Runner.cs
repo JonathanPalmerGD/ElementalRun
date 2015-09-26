@@ -34,7 +34,6 @@ public class Runner : MonoBehaviour
 
 	private GameObject invulPrefab;
 
-
 	private GameObject burnedParticle;
 	private GameObject soakedParticle;
 	private GameObject gustedParticle;
