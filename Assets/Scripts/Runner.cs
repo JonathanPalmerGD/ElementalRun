@@ -249,6 +249,11 @@ public class Runner : MonoBehaviour
 			PhaseShift(3);
 		}
 		#endregion
+
+		if(Input.GetKeyDown(KeyCode.Tab))
+		{
+			AdjustHealth(-maxHealth / 4);
+		}
 	}
 
 	public void AdjustSpeed(float adjustment)
@@ -341,7 +346,10 @@ public class Runner : MonoBehaviour
 			if (health <= 0)
 			{
 				Debug.Log("Death!\tScore:\n\t" + score[0] + ", " + score[1] + ", " + score[2] + ", " + score[3] + "\n");
-				Application.LoadLevel(Application.loadedLevel);
+
+				StartCoroutine("PlayerDeath");
+
+				//Application.LoadLevel(Application.loadedLevel);
 			}
 		}
 		else
@@ -414,6 +422,8 @@ public class Runner : MonoBehaviour
 			Vector3 destination = Cameras[targetPlane].transform.position - relativePos;
 			transform.position = destination;
 
+			//platChar.m_Rigidbody2D.AddForce(Vector2.right * 200f, ForceMode2D.Impulse);
+
 			WorldIndex = targetPlane;
 
 			if (statusEffect != 0)
@@ -424,6 +434,25 @@ public class Runner : MonoBehaviour
 			//When the player shifts, they are temporarily invulnerable.
 			SetInvulnerability(.5f);
 
+			StartCoroutine("MicroPause", .1f);
 		}
+	}
+
+	public IEnumerator PlayerDeath()
+	{
+		float adjusted = 0.01f;
+		Time.timeScale = adjusted;
+		yield return new WaitForSeconds(.5f * adjusted);
+		Time.timeScale = 1f;
+
+		Application.LoadLevel(Application.loadedLevel);
+	}
+
+	public IEnumerator MicroPause(float time)
+	{
+		float adjusted = 0.01f;
+		Time.timeScale = adjusted;
+		yield return new WaitForSeconds(time * adjusted);
+		Time.timeScale = 1f;
 	}
 }
