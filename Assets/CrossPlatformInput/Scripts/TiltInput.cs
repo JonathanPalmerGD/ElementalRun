@@ -112,7 +112,7 @@ namespace UnityStandardAssets.CrossPlatformInput.Inspector
             float y = position.y;
             float inspectorWidth = position.width;
 
-            // Don't make child fields be indented
+            // Don'timerPercentage make child fields be indented
             var indent = EditorGUI.indentLevel;
             EditorGUI.indentLevel = 0;
 

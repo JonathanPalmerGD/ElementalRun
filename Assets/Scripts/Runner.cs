@@ -8,6 +8,14 @@ public class Runner : MonoBehaviour
 	public static Runner Inst;
 	public static PlatformerCharacter2D platChar;
 	public static Platformer2DUserControl platController;
+
+	private float maxHeight = .7f;
+	private float minHeight = .1f;
+
+	private float[] yAbove = { .9f, .2f, .1f, 0 };
+	private float[] yEqual = { .3f, .2f, .1f, 0 };
+	private float[] yBelow = { .9f, .8f, .7f, 0 };
+
 	#region Core Attributes
 	public bool invulnerable;
 	public float invulFrames;
@@ -56,6 +64,7 @@ public class Runner : MonoBehaviour
 	public Slider speedSlider;
 	#endregion
 
+	#region Particle Control
 	private void SetupParticles()
 	{
 		burnedPrefab = Resources.Load<GameObject>("Burned");
@@ -89,6 +98,7 @@ public class Runner : MonoBehaviour
 
 		invulParticle.SetActive(false);
 	}
+	#endregion
 
 	void Start()
 	{
@@ -126,6 +136,8 @@ public class Runner : MonoBehaviour
 				//Lanes[i,j] = Cameras[i].transform.FindChild("Lane Parent").FindChild("Lane ["+j+"]").gameObject;
 			}
 		}
+
+		SetCameras();
 	}
 
 	void Update()
@@ -159,21 +171,9 @@ public class Runner : MonoBehaviour
 			StartCoroutine(BurnDamage());
 		}
 
-		Debug.Log("W Index:" + WorldIndex + "\n");
+		//Debug.Log("W Index:" + WorldIndex + "\n");
 		score[WorldIndex] += Time.deltaTime;
 		
-	}
-
-	IEnumerator BurnDamage()
-	{
-		burning = true;
-		yield return new WaitForSeconds(.25f);
-
-		if (statusEffect == 1)
-		{
-			AdjustHealth(-.5f);
-			burning = false;
-		}
 	}
 
 	public void GetInput()
@@ -252,7 +252,37 @@ public class Runner : MonoBehaviour
 
 		if(Input.GetKeyDown(KeyCode.Tab))
 		{
-			AdjustHealth(-maxHealth / 4);
+			AdjustHealth(-maxHealth / 100);
+		}
+
+		if (Input.GetKeyDown(KeyCode.Return))
+		{
+			Cameras[WorldIndex].GetComponent<CameraKick>().KickCamera(Vector3.right);
+		}
+	}
+
+	public void SetCameras()
+	{
+		for (int i = 0; i < Cameras.Length; i++)
+		{
+			if (i == WorldIndex)
+			{
+				Cameras[i].rect = new Rect(Cameras[i].rect.x, yEqual[i], Cameras[i].rect.width, maxHeight);
+				Cameras[i].orthographicSize = 10;
+			}
+			else
+			{
+				Cameras[i].orthographicSize = 5;
+			}
+
+			if(i > WorldIndex)
+			{
+				Cameras[i].rect = new Rect(Cameras[i].rect.x, yAbove[i], Cameras[i].rect.width, minHeight);
+			}
+			else if(i < WorldIndex)
+			{
+				Cameras[i].rect = new Rect(Cameras[i].rect.x, yBelow[i], Cameras[i].rect.width, minHeight);
+			}
 		}
 	}
 
@@ -336,6 +366,8 @@ public class Runner : MonoBehaviour
 		//The Soaked status effect damage prevention.
 		if (statusEffect != 2 || invulnerable)
 		{
+			Cameras[WorldIndex].GetComponent<CameraKick>().KickCamera(Vector3.right);
+
 			health += healthAdj;
 			if (health > maxHealth)
 			{
@@ -434,7 +466,22 @@ public class Runner : MonoBehaviour
 			//When the player shifts, they are temporarily invulnerable.
 			SetInvulnerability(.5f);
 
+			SetCameras();
+
 			StartCoroutine("MicroPause", .1f);
+		}
+	}
+
+	#region Coroutines
+	IEnumerator BurnDamage()
+	{
+		burning = true;
+		yield return new WaitForSeconds(.25f);
+
+		if (statusEffect == 1)
+		{
+			AdjustHealth(-.5f);
+			burning = false;
 		}
 	}
 
@@ -455,4 +502,5 @@ public class Runner : MonoBehaviour
 		yield return new WaitForSeconds(time * adjusted);
 		Time.timeScale = 1f;
 	}
+	#endregion
 }
