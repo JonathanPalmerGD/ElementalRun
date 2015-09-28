@@ -120,7 +120,7 @@ public class Spawner : MonoBehaviour
 
 				GameObject.Destroy(go);
 
-				//Decrement by one to make sure we don't skip an obstacle.
+				//Decrement by one to make sure we don'timerPercentage skip an obstacle.
 				i--;
 			}
 		}
@@ -143,7 +143,7 @@ public class Spawner : MonoBehaviour
 
 				GameObject.Destroy(go);
 
-				//Decrement by one to make sure we don't skip an obstacle.
+				//Decrement by one to make sure we don'timerPercentage skip an obstacle.
 				i--;
 			}
 		}
@@ -166,7 +166,7 @@ public class Spawner : MonoBehaviour
 
 				GameObject.Destroy(go);
 
-				//Decrement by one to make sure we don't skip an obstacle.
+				//Decrement by one to make sure we don'timerPercentage skip an obstacle.
 				i--;
 			}
 		}

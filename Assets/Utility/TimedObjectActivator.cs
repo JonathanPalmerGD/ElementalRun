@@ -106,7 +106,7 @@ namespace UnityStandardAssets.Utility.Inspector
             // Draw label
             EditorGUI.PrefixLabel(position, GUIUtility.GetControlID(FocusType.Passive), label);
 
-            // Don't make child fields be indented
+            // Don'timerPercentage make child fields be indented
             var indent = EditorGUI.indentLevel;
             EditorGUI.indentLevel = 0;
 

@@ -30,7 +30,7 @@ namespace UnityStandardAssets.Effects
             {
                 if (col.contacts.Length > 0)
                 {
-                    // compare relative velocity to collision normal - so we don't explode from a fast but gentle glancing collision
+                    // compare relative velocity to collision normal - so we don'timerPercentage explode from a fast but gentle glancing collision
                     float velocityAlongCollisionNormal =
                         Vector3.Project(col.relativeVelocity, col.contacts[0].normal).magnitude;
 
