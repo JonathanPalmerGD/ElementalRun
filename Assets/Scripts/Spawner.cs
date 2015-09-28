@@ -103,13 +103,13 @@ public class Spawner : MonoBehaviour
 		obstacles.Add(obst);
 	}
 
-	private void MovePlatforms()
+	private void MovePlatforms(float timeAdjustment)
 	{
 		for (int i = 0; i < platforms.Count; i++)
 		{
 			//Do we want different speed obstacles?
 
-			platforms[i].transform.position -= Vector3.right * Time.deltaTime * Runner.Inst.speed;
+			platforms[i].transform.position -= Vector3.right * timeAdjustment * Runner.Inst.speed;
 
 			if (platforms[i].transform.position.x < ResetPoint.transform.position.x)
 			{
@@ -126,13 +126,13 @@ public class Spawner : MonoBehaviour
 		}
 	}
 
-	private void MoveToggles()
+	private void MoveToggles(float timeAdjustment)
 	{
 		for (int i = 0; i < toggles.Count; i++)
 		{
 			//Do we want different speed obstacles?
 
-			toggles[i].transform.position -= Vector3.right * Time.deltaTime * Runner.Inst.speed;
+			toggles[i].transform.position -= Vector3.right * timeAdjustment * Runner.Inst.speed;
 
 			if (toggles[i].transform.position.x < ResetPoint.transform.position.x)
 			{
@@ -149,13 +149,13 @@ public class Spawner : MonoBehaviour
 		}
 	}
 
-	private void MoveObstacles()
+	private void MoveObstacles(float timeAdjustment)
 	{
 		for (int i = 0; i < obstacles.Count; i++)
 		{
 			//Do we want different speed obstacles?
 
-			obstacles[i].transform.position -= Vector3.right * Time.deltaTime * Runner.Inst.speed;
+			obstacles[i].transform.position -= Vector3.right * timeAdjustment * Runner.Inst.speed;
 
 			if (obstacles[i].transform.position.x < ResetPoint.transform.position.x)
 			{
@@ -172,52 +172,61 @@ public class Spawner : MonoBehaviour
 		}
 	}
 
+	private void UpdateWorld(float timeAdjustment)
+	{
+		platformTimer -= timeAdjustment;
+		if (platformTimer <= 0)
+		{
+			GameObject whichPlatform = platformPrefab;
+			int randCase = Random.Range(0, 10);
+			if (randCase < 3)
+			{
+				whichPlatform = platformPrefab;
+				platformTimer = platformFreq / Runner.Inst.speed * 18 + Random.Range(-0.25f, 0.25f);
+				CreatePlatform(whichPlatform, true);
+			}
+			else if (randCase < 8)
+			{
+				whichPlatform = platformLongPrefab;
+				platformTimer = platformFreq / Runner.Inst.speed * 24 + Random.Range(1.25f, 2.05f);
+				CreatePlatform(whichPlatform, false);
+			}
+			else
+			{
+				platformTimer = platformFreq / Runner.Inst.speed * 18 + Random.Range(-0.25f, 0.25f);
+			}
+
+			//platformTimer = platformFreq / Runner.Inst.speed * 18 + Random.Range(-0.25f, 0.25f);
+		}
+
+		toggleTimer -= timeAdjustment;
+		if (toggleTimer <= 0)
+		{
+			toggleTimer = toggleFreq + Random.Range(-2.1f, 2.1f);
+			CreateToggle();
+		}
+
+		obstacleTimer -= timeAdjustment;
+		if (obstacleTimer <= 0)
+		{
+			obstacleTimer = obstacleFreq + Random.Range(-2.1f, 2.1f);
+			CreateObstacle();
+		}
+
+		MovePlatforms(timeAdjustment);
+		MoveToggles(timeAdjustment);
+		MoveObstacles(timeAdjustment);
+	}
+
 	void Update()
 	{
 		if (Runner.Inst.WorldIndex == worldIndex)
 		{
-			platformTimer -= Time.deltaTime;
-			if (platformTimer <= 0)
-			{
-				GameObject whichPlatform = platformPrefab;
-				int randCase = Random.Range(0,10);
-				if (randCase < 3)
-				{
-					whichPlatform = platformPrefab;
-					platformTimer = platformFreq / Runner.Inst.speed * 18 + Random.Range(-0.25f, 0.25f);
-					CreatePlatform(whichPlatform, true);
-				}
-				else if (randCase < 8)
-				{
-					whichPlatform = platformLongPrefab;
-					platformTimer = platformFreq / Runner.Inst.speed * 24 + Random.Range(1.25f, 2.05f);
-					CreatePlatform(whichPlatform, false);
-				}
-				else
-				{
-					platformTimer = platformFreq / Runner.Inst.speed * 18 + Random.Range(-0.25f, 0.25f);
-				}
-
-				//platformTimer = platformFreq / Runner.Inst.speed * 18 + Random.Range(-0.25f, 0.25f);
-			}
-
-			toggleTimer -= Time.deltaTime;
-			if (toggleTimer <= 0)
-			{
-				toggleTimer = toggleFreq + Random.Range(-2.1f, 2.1f);
-				CreateToggle();
-			}
-
-			obstacleTimer -= Time.deltaTime;
-			if (obstacleTimer <= 0)
-			{
-				obstacleTimer = obstacleFreq + Random.Range(-2.1f, 2.1f);
-				CreateObstacle();
-			}
-
-			MovePlatforms();
-			MoveToggles();
-			MoveObstacles();
+			UpdateWorld(Time.deltaTime);
+		}
+		else
+		{
+			UpdateWorld(Time.deltaTime * .25f);
 		}
 	}
 }
