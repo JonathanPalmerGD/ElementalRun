@@ -29,11 +29,13 @@ public class Runner : MonoBehaviour
 	public float speed;
 	private float maxSpeed = 25;
 	public float MaxSpeed { get { return maxSpeed; } }
-	private float minSpeed = 15;
+	private float minSpeed = 0;
 
 	public int statusEffect = 0;
 	public float statusLength = 0.0f;
 	public bool burning = false;
+
+	public bool AdvanceRight = false;
 
 	private GameObject burnedPrefab;
 	private GameObject soakedPrefab;
@@ -160,6 +162,7 @@ public class Runner : MonoBehaviour
 		}
 		#endregion
 
+		#region Status Effects
 		statusLength -= Time.deltaTime;
 		if (statusEffect != 0 && statusLength <= 0)
 		{
@@ -170,6 +173,20 @@ public class Runner : MonoBehaviour
 		{
 			StartCoroutine(BurnDamage());
 		}
+		#endregion
+
+		#region Advancement Progression
+		if (transform.position.x >= Cameras[WorldIndex].transform.position.x + 5)
+		{
+			Debug.Log("Advancing Right\n");
+			AdvanceRight = true;
+		}
+		else
+		{
+			//Debug.Log("Advancing Right\n");
+			AdvanceRight = false;
+		}
+		#endregion
 
 		//Debug.Log("W Index:" + WorldIndex + "\n");
 		score[WorldIndex] += Time.deltaTime;

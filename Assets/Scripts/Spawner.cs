@@ -17,6 +17,7 @@ public class Spawner : MonoBehaviour
 
 	public GameObject ResetPoint;
 	public GameObject spawnPosition;
+	public GameObject CreationParent;
 
 	public List<GameObject> platforms;
 	public List<Toggle> toggles;
@@ -43,6 +44,9 @@ public class Spawner : MonoBehaviour
 		toggleTimer = toggleFreq;
 		obstacleTimer = obstacleFreq;
 		//Create base platforms to use?
+		
+		CreationParent = new GameObject();
+		CreationParent.name = name + " folder";
 
 		StarterPlatforms();
 	}
@@ -53,6 +57,9 @@ public class Spawner : MonoBehaviour
 		for (int i = 0; i < 7; i++)
 		{
 			go = GameObject.Instantiate(platformPrefab, spawnPosition.transform.position + Vector3.left * (75 - i * 10), Quaternion.identity) as GameObject;
+			
+			go.transform.SetParent(CreationParent.transform);
+
 			platforms.Add(go);
 		}
 	}
@@ -61,6 +68,8 @@ public class Spawner : MonoBehaviour
 	{
 		float randHeight = Random.Range(-.5f, 6.0f);
 		GameObject go = GameObject.Instantiate(prefab, spawnPosition.transform.position + (Vector3.up * randHeight), Quaternion.identity) as GameObject;
+
+		go.transform.SetParent(CreationParent.transform);
 
 		if (tilt)
 		{
@@ -81,6 +90,7 @@ public class Spawner : MonoBehaviour
 	{
 		float randHeight = Random.Range(0, 10);
 		GameObject go = GameObject.Instantiate(togglePrefab, spawnPosition.transform.position + (Vector3.up * randHeight), Quaternion.identity) as GameObject;
+		go.transform.SetParent(CreationParent.transform);
 		Toggle tog = go.GetComponent<Toggle>();
 
 		int random = Random.Range(0, 4);
@@ -94,6 +104,7 @@ public class Spawner : MonoBehaviour
 	{
 		float randHeight = Random.Range(0, 10);
 		GameObject go = GameObject.Instantiate(obstaclePrefab, spawnPosition.transform.position + (Vector3.up * randHeight), Quaternion.identity) as GameObject;
+		go.transform.SetParent(CreationParent.transform);
 		Obstacle obst = go.GetComponent<Obstacle>();
 
 		int random = Random.Range(0, 4);
@@ -213,9 +224,12 @@ public class Spawner : MonoBehaviour
 			CreateObstacle();
 		}
 
-		MovePlatforms(timeAdjustment);
-		MoveToggles(timeAdjustment);
-		MoveObstacles(timeAdjustment);
+		if (Runner.Inst.AdvanceRight)
+		{
+			MovePlatforms(timeAdjustment);
+			MoveToggles(timeAdjustment);
+			MoveObstacles(timeAdjustment);
+		}
 	}
 
 	void Update()
