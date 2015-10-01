@@ -27,9 +27,9 @@ public class Runner : MonoBehaviour
 	public float health = 100;
 
 	public float speed;
-	private float maxSpeed = 25;
+	private float maxSpeed = 15;
 	public float MaxSpeed { get { return maxSpeed; } }
-	private float minSpeed = 0;
+	private float minSpeed = 10;
 
 	public int statusEffect = 0;
 	public float statusLength = 0.0f;
@@ -54,6 +54,7 @@ public class Runner : MonoBehaviour
 
 	#region Lane and World Info
 	public Camera[] Cameras;
+	public CameraKick[] Kicks;
 	public GameObject[,] Lanes;
 	public int WorldIndex;
 	public int lane;
@@ -127,12 +128,14 @@ public class Runner : MonoBehaviour
 		speedSlider.minValue = minSpeed;
 		speedSlider.value = speed;
 
-		speed = 5;
+		speed = minSpeed;
 
 		Lanes = new GameObject[4,4];
 
+		Kicks = new CameraKick[4];
 		for(int i = 0; i < Cameras.Length; i++)
 		{
+			Kicks[i] = Cameras[i].GetComponent<CameraKick>();
 			for(int j = 0; j < 4; j++)
 			{
 				//Lanes[i,j] = Cameras[i].transform.FindChild("Lane Parent").FindChild("Lane ["+j+"]").gameObject;
@@ -274,7 +277,7 @@ public class Runner : MonoBehaviour
 
 		if (Input.GetKeyDown(KeyCode.Return))
 		{
-			Cameras[WorldIndex].GetComponent<CameraKick>().KickCamera(Vector3.right);
+			Cameras[WorldIndex].GetComponent<CameraKick>().KickCameraVariation(Vector3.right, 1.0f);
 		}
 	}
 
@@ -301,6 +304,26 @@ public class Runner : MonoBehaviour
 				Cameras[i].rect = new Rect(Cameras[i].rect.x, yBelow[i], Cameras[i].rect.width, minHeight);
 			}
 		}
+	}
+
+	public void KickPlayerCamera(Vector3 dir, float magnitude, float radVariation = -1, bool allCameras = false)
+	{
+		if (allCameras)
+		{
+			for (int i = 0; i < 4; i++)
+			{
+				KickCamera(dir, magnitude, i, radVariation);
+			}
+		}
+		else
+		{
+			KickCamera(dir, magnitude, WorldIndex, radVariation);
+		}
+	}
+
+	private void KickCamera(Vector3 dir, float magnitude, int index, float radVariation = -1)
+	{
+		Kicks[index].KickCameraVariation(dir, magnitude, 0, 0, radVariation);
 	}
 
 	public void AdjustSpeed(float adjustment)
@@ -383,7 +406,7 @@ public class Runner : MonoBehaviour
 		//The Soaked status effect damage prevention.
 		if (statusEffect != 2 || invulnerable)
 		{
-			Cameras[WorldIndex].GetComponent<CameraKick>().KickCamera(Vector3.right);
+			Cameras[WorldIndex].GetComponent<CameraKick>().KickCameraVariation(Vector3.right, 1.0f);
 
 			health += healthAdj;
 			if (health > maxHealth)

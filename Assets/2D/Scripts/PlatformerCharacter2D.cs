@@ -41,13 +41,13 @@ public class PlatformerCharacter2D : MonoBehaviour
 			{
 				m_Grounded = true;
 				floor = colliders[i].gameObject;
-				Runner.Inst.transform.SetParent(floor.transform);
+				//Runner.Inst.transform.SetParent(floor.transform);
 			}
 		}
 
 		if (!m_Grounded)
 		{
-			Runner.Inst.transform.SetParent(null);
+			//Runner.Inst.transform.SetParent(null);
 			floor = null;
 		}
 		m_Anim.SetBool("Ground", m_Grounded);

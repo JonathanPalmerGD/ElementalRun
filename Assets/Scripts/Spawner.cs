@@ -23,6 +23,8 @@ public class Spawner : MonoBehaviour
 	public List<Toggle> toggles;
 	public List<Obstacle> obstacles;
 
+	public float speedModifier = 0;
+
 	public float platformTimer = 0;
 	private float platformFreq = .75f;
 	public float obstacleTimer = 0;
@@ -120,7 +122,7 @@ public class Spawner : MonoBehaviour
 		{
 			//Do we want different speed obstacles?
 
-			platforms[i].transform.position -= Vector3.right * timeAdjustment * Runner.Inst.speed;
+			platforms[i].transform.position -= Vector3.right * timeAdjustment * (Runner.Inst.speed + speedModifier);
 
 			if (platforms[i].transform.position.x < ResetPoint.transform.position.x)
 			{
@@ -143,7 +145,7 @@ public class Spawner : MonoBehaviour
 		{
 			//Do we want different speed obstacles?
 
-			toggles[i].transform.position -= Vector3.right * timeAdjustment * Runner.Inst.speed;
+			toggles[i].transform.position -= Vector3.right * timeAdjustment * (Runner.Inst.speed + speedModifier);
 
 			if (toggles[i].transform.position.x < ResetPoint.transform.position.x)
 			{
@@ -166,7 +168,7 @@ public class Spawner : MonoBehaviour
 		{
 			//Do we want different speed obstacles?
 
-			obstacles[i].transform.position -= Vector3.right * timeAdjustment * Runner.Inst.speed;
+			obstacles[i].transform.position -= Vector3.right * timeAdjustment * (Runner.Inst.speed + speedModifier);
 
 			if (obstacles[i].transform.position.x < ResetPoint.transform.position.x)
 			{
@@ -185,6 +187,8 @@ public class Spawner : MonoBehaviour
 
 	private void UpdateWorld(float timeAdjustment)
 	{
+		speedModifier += timeAdjustment / 10;
+
 		platformTimer -= timeAdjustment;
 		if (platformTimer <= 0)
 		{
@@ -224,12 +228,12 @@ public class Spawner : MonoBehaviour
 			CreateObstacle();
 		}
 
-		if (Runner.Inst.AdvanceRight)
-		{
+		//if (Runner.Inst.AdvanceRight)
+		//{
 			MovePlatforms(timeAdjustment);
 			MoveToggles(timeAdjustment);
 			MoveObstacles(timeAdjustment);
-		}
+		//}
 	}
 
 	void Update()

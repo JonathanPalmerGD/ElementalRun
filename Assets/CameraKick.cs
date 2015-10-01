@@ -69,8 +69,27 @@ public class CameraKick : MonoBehaviour
 			}
 		}
 	}
-	
-	public void KickCamera(Vector3 direction, float radianVariation = -1)
+
+	public void KickCameraVariation(Vector3 direction, float magnitude = 1, float minVariation = 0, float maxVariation = 0, float angleVariation = -1)
+	{
+		if (angleVariation < 0)
+		{
+			angleVariation = 0;
+		}
+
+		float angleAmount = Random.Range(-angleVariation, angleVariation);
+
+		recoiling = true;
+		kicking = true;
+
+		kickTimer.Start();
+
+		Vector3 variedDir = Quaternion.AngleAxis(angleAmount, Vector3.forward) * direction;
+
+		kickedPosition = intendedPosition + variedDir.normalized * Random.Range(kickMin, kickMax);
+	}
+
+	public void KickCamera(Vector3 direction, float magnitude = 1, float radianVariation = -1)
 	{
 		if (radianVariation < 0)
 		{
@@ -87,6 +106,5 @@ public class CameraKick : MonoBehaviour
 		Vector3 variedDir = Quaternion.AngleAxis(angleAmount, Vector3.forward) * direction;
 
 		kickedPosition = intendedPosition + variedDir.normalized * Random.Range(kickMin, kickMax);
-		
 	}
 }

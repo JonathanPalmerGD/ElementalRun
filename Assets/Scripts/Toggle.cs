@@ -6,11 +6,13 @@ public class Toggle : MonoBehaviour
 	public enum Element { Fire, Water, Earth, Air };
 	public Element affiliation;
 	public Renderer rend;
+	private GameObject toggledVisual;
 
 	public static bool[] obstacleEnabled = { true, true, true, true };
 
 	void Start()
 	{
+		toggledVisual = Resources.Load<GameObject>("Toggled");
 		if (affiliation == Element.Fire)
 		{
 			rend.material.color = new Color(8f, .25f, .0f);
@@ -31,8 +33,16 @@ public class Toggle : MonoBehaviour
 
 	void OnTriggerEnter2D(Collider2D other)
 	{
-		if (other.tag == "Player")
+		if (enabled && other.tag == "Player")
 		{
+			GameObject go = GameObject.Instantiate(toggledVisual, transform.position, Quaternion.identity) as GameObject;
+
+			go.transform.SetParent(transform);
+			Destroy(go, 3.0f);
+
+			Runner.Inst.KickPlayerCamera(Vector3.up, .3f);
+			//Runner.Inst.Kicks[Runner.Inst.WorldIndex].KickCamera(Vector3.up * .1f);
+
 			obstacleEnabled[(int)affiliation] = !obstacleEnabled[(int)affiliation];
 			enabled = false;
 			rend.enabled = false;
