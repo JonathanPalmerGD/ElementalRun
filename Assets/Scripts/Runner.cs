@@ -9,6 +9,11 @@ public class Runner : MonoBehaviour
 	public static PlatformerCharacter2D platChar;
 	public static Platformer2DUserControl platController;
 
+	public AudioSource burnedAudio;
+	public AudioSource soakedAudio;
+	public AudioSource muckedAudio;
+	public AudioSource gustedAudio;
+
 	private float maxHeight = .7f;
 	private float minHeight = .1f;
 
@@ -198,10 +203,10 @@ public class Runner : MonoBehaviour
 
 	public void GetInput()
 	{
-		if(Input.GetMouseButtonDown(1))
-		{
-			platController.m_ForceJump = true;
-		}
+		//if(Input.GetMouseButtonDown(1))
+		//{
+		//	platController.m_ForceJump = true;
+		//}
 
 		#region L/R Lane Shifting
 		if (Input.GetKeyDown(KeyCode.UpArrow))
@@ -360,6 +365,26 @@ public class Runner : MonoBehaviour
 		}
 	}
 
+	public void EndStatusAudio()
+	{
+		if (burnedAudio)
+		{
+			burnedAudio.Stop();
+		}
+		if (soakedAudio)
+		{
+			soakedAudio.Stop();
+		}
+		if (muckedAudio)
+		{
+			muckedAudio.Stop();
+		}
+		if (gustedAudio)
+		{
+			gustedAudio.Stop();
+		}
+	}
+
 	public void ChangeStatusEffect(int newStatus)
 	{
 		DisableAllParticles();
@@ -376,23 +401,31 @@ public class Runner : MonoBehaviour
 		{
 			burnedParticle.SetActive(true);
 			statusUI.text = "Burning";
+			burnedAudio = AudioManager.Instance.MakeSource("burnedAudio");
+			burnedAudio.Play();
 			burning = false;
 		}
 		if (newStatus == 2)
 		{
 			soakedParticle.SetActive(true);
 			statusUI.text = "Soaked";
+			soakedAudio = AudioManager.Instance.MakeSource("soakedAudio");
+			soakedAudio.Play();
 		}
 		if (newStatus == 3)
 		{
 			muckedParticle.SetActive(true);
 			statusUI.text = "Mucked";
+			muckedAudio = AudioManager.Instance.MakeSource("muckedAudio");
+			muckedAudio.Play();
 			speed = minSpeed;
 		}
 		if (newStatus == 4)
 		{
 			gustedParticle.SetActive(true);
 			statusUI.text = "Gusted";
+			gustedAudio = AudioManager.Instance.MakeSource("gustedAudio");
+			gustedAudio.Play();
 			speed = maxSpeed;
 		}
 
@@ -491,6 +524,8 @@ public class Runner : MonoBehaviour
 	{
 		if (targetPlane >= 0 && targetPlane < 4)
 		{
+			AudioManager.Instance.MakeSource("PhaseShift").Play();
+
 			transform.SetParent(null);
 
 			Vector3 relativePos = Cameras[WorldIndex].transform.position - transform.position;
@@ -520,6 +555,7 @@ public class Runner : MonoBehaviour
 	IEnumerator BurnDamage()
 	{
 		burning = true;
+		//AudioManager.Instance.MakeSource("Burn").Play();
 		yield return new WaitForSeconds(.50f);
 
 		if (statusEffect == 1)

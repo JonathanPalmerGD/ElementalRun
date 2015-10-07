@@ -9,6 +9,12 @@ public class SetupSingletons : MonoBehaviour
 	{
 		AudioManager.Instance.Awake();
 
+		AudioSource track = AudioManager.Instance.MakeSource("yeGods");
+
+		track.loop = true;
+		track.Play();
+
+		AudioManager.Instance.AddMusicTrack(track, true);
 		//GameManager.Instance.BeginGameMusic();
 
 		Destroy(gameObject);

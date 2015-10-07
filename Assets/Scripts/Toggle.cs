@@ -40,7 +40,16 @@ public class Toggle : MonoBehaviour
 			go.transform.SetParent(transform);
 			Destroy(go, 3.0f);
 
-			Runner.Inst.KickPlayerCamera(Vector3.up, .3f);
+			if (!obstacleEnabled[(int)affiliation])
+			{
+				AudioManager.Instance.MakeSource("Reload").Play();
+			}
+			else
+			{
+				AudioManager.Instance.MakeSource("Bang").Play();
+			}
+
+			Runner.Inst.KickPlayerCamera(Vector3.up, .7f);
 			//Runner.Inst.Kicks[Runner.Inst.WorldIndex].KickCamera(Vector3.up * .1f);
 
 			obstacleEnabled[(int)affiliation] = !obstacleEnabled[(int)affiliation];
