@@ -9,11 +9,15 @@ public class AdvancedTimer : ScriptableObject
 	//	get { return counter; }
 	//	set { counter = value; }
 	//}
-	public float lastResetValue;
+	//public float lastResetValue;
 
-	public float countFromValue;
-	public float variationMin;
-	public float variationMax;
+	public float timerSetValue;
+	public float timerTargetValue;
+	public float minDurVariation;
+	public float maxDurVariation;
+
+	public bool countUpwards = false;
+
 	public bool respectPause = true;
 	public bool RespectPause 
 	{
@@ -39,23 +43,48 @@ public class AdvancedTimer : ScriptableObject
 	/// <summary>
 	/// Initializes the Timer variables
 	/// </summary>
-	/// <param name="timerAmount">The default starting value for the timer upon resets</param>
-	/// <param name="startAt">The amount the timer should be set to the first time, -1 for whatever the timerAmount is</param>
-	/// <param name="minVariation">Randomize the reset amounts, minimum adjustment</param>
-	/// <param name="maxVariation">Randomize the reset amounts, maximum adjustment</param>
+	/// <param name="timerDuration">The default starting value for the timer upon resets</param>
+	/// <param name="startAt">The amount the timer should be set to the first time, -1 for whatever the timerDuration is</param>
+	/// <param name="durMinVariation">Randomize the reset amounts, minimum adjustment</param>
+	/// <param name="durMaxVariation">Randomize the reset amounts, maximum adjustment</param>
 	/// <param name="beginImmediately">Should the timer begin immediately for the current Updates</param>
 	/// <param name="resetAfterProc">Shoudl the timer automatically reset and start timing again when it finishes</param>
 	/// <param name="runWhilePaused">Should the timer respect pausing.</param>
-	public void Init(float timerAmount, float startAt = -1, float minVariation = 0, float maxVariation = 0, bool beginImmediately = true, bool resetAfterProc = true, bool runWhilePaused = false)
+	public void Init(float timerDuration, float startAt = -1, bool countDownwards = true, float durMinVariation = 0, float durMaxVariation = 0, bool beginImmediately = true, bool resetAfterProc = true, bool runWhilePaused = false)
 	{
-		if(startAt != -1)
-			counter = startAt;
-		else
-			counter = timerAmount;
-		countFromValue = timerAmount;
+		countUpwards = !countDownwards;
 
-		variationMin = minVariation;
-		variationMax = maxVariation;
+		if (startAt != -1)
+		{
+			if (countUpwards)
+			{
+				counter = 0;
+				timerTargetValue = startAt;
+			}
+			else
+			{
+				counter = startAt;
+				timerTargetValue = 0;
+			}
+		}
+		else
+		{
+			if (countUpwards)
+			{
+				counter = 0;
+				timerTargetValue = timerDuration;
+			}
+			else
+			{
+				counter = timerDuration;
+				timerTargetValue = 0;
+			}
+		}
+
+		timerSetValue = timerDuration;
+
+		minDurVariation = durMinVariation;
+		maxDurVariation = durMaxVariation;
 
 		running = beginImmediately;
 
@@ -108,9 +137,9 @@ public class AdvancedTimer : ScriptableObject
 				counter += timeToAdjust;
 			}
 		}
-		else if (capAtMax && counter + timeToAdjust > countFromValue + variationMax)
+		else if (capAtMax && counter + timeToAdjust > timerSetValue + maxDurVariation)
 		{
-			counter = countFromValue + variationMax;
+			counter = timerSetValue + maxDurVariation;
 		}
 		else
 		{
@@ -122,36 +151,69 @@ public class AdvancedTimer : ScriptableObject
 	{
 		running = beginTimer;
 
-		float randVal = Random.Range(variationMin, variationMax);
+		float randVal = Random.Range(minDurVariation, maxDurVariation);
 
-		lastResetValue = countFromValue + randVal;
-		counter += countFromValue + randVal;
+		//lastResetValue = timerSetValue + randVal;
+		//counter += timerSetValue + randVal;
 
-		//Debug.Log("AdvancedTimer Ring!\nResetting counter to: " + counter + "\tRandVal: " + randVal + "\tVarMin: " + variationMin + "\tVarMax: " + variationMax + "\n");
+		//If we count up
+		if (countUpwards)
+		{
+			//Set the counter to 0
+			counter = 0;
+			//Set our target based on what the timer's set value is plus the variation
+			timerTargetValue = timerSetValue + randVal;
+		}
+		//If we count down, do the opposite.
+		else
+		{
+			counter += timerSetValue + randVal;
+		}
+
+		//Debug.Log("AdvancedTimer Ring!\nResetting counter to: " + counter + "\tRandVal: " + randVal + "\tVarMin: " + minDurVariation + "\tVarMax: " + maxDurVariation + "\n");
 	}
 
-	public void IncrementTimer(float timePassed)
+	public void DecrementTimer(float timePassed)
 	{
 		counter -= timePassed;
 
-		if (counter <= 0)
+		if (counter <= timerTargetValue)
 		{
 			timerComplete = true;
 			running = false;
 		}
 	}
 
-	public void UpdateTimer(float timePaseed)
+	public void IncrementTimer(float timePassed)
+	{
+		counter += timePassed;
+
+		if (counter >= timerTargetValue)
+		{
+			timerComplete = true;
+			running = false;
+		}
+	}
+
+	public void UpdateTimer(float timePassed)
 	{
 		if (running && !timerComplete)
 		{
-			if (!respectPause)
+			//if (!respectPause)
+			//{
+			if (countUpwards)
 			{
-				IncrementTimer(timePaseed);
+				IncrementTimer(timePassed);
 			}
+			else
+			{
+				DecrementTimer(timePassed);
+			}
+
+			//}
 			//else if (!GameManager.Inst.paused)
 			//{
-				IncrementTimer(timePaseed);
+			//	DecrementTimer(timePassed);
 			//}
 		}
 	}

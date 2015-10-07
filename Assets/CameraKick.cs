@@ -8,7 +8,7 @@ public class CameraKick : MonoBehaviour
 	public float kickMin = .6f;
 	public float kickMax = 1.2f;
 	public float angleVariation = 20;
-	private float recoverDur = .05f;
+	private float recoverDur = .08f;
 	public bool recoiling = false;
 	public bool kicking = false;
 	public AdvancedTimer kickTimer;
@@ -18,7 +18,7 @@ public class CameraKick : MonoBehaviour
 		intendedPosition = transform.position;
 		kickTimer = ScriptableObject.CreateInstance<AdvancedTimer>();
 
-		kickTimer.Init(recoverDur);
+		kickTimer.Init(recoverDur, -1, false, 0,0, false);
 		kickTimer.Stop();
 		kickTimer.ContinuousReset = false;
 	}
@@ -27,10 +27,10 @@ public class CameraKick : MonoBehaviour
 	{
 		kickTimer.UpdateTimer(Time.deltaTime);
 
-		//if (Input.GetKeyDown(KeyCode.Return))
-		//{
-		//	KickCamera(Vector3.right, angleVariation);
-		//}
+		if (Input.GetKeyDown(KeyCode.Return))
+		{
+			KickCamera(Vector3.right, 2);
+		}
 
 		if (kicking)
 		{
@@ -38,8 +38,9 @@ public class CameraKick : MonoBehaviour
 			{
 				if (kickTimer.Running)
 				{
-					float timerPercentage = (1 - kickTimer.counter / kickTimer.countFromValue);
-					//Debug.Log("Recoiling\nTimer running: " + timerPercentage);
+					float timerPercentage = (kickTimer.counter / kickTimer.timerTargetValue);
+					//int kt = (int)(kickTimer.counter * 100);
+					//Debug.Log("Recoiling\nTimer running: " + kickTimer.counter);
 					transform.position = Vector3.Lerp(intendedPosition, kickedPosition, timerPercentage);
 				}
 				if(kickTimer.CheckTimer())
@@ -57,7 +58,7 @@ public class CameraKick : MonoBehaviour
 			{
 				if (kickTimer.Running)
 				{
-					float timerPercentage = (1 - kickTimer.counter / kickTimer.countFromValue);
+					float timerPercentage = (kickTimer.counter / kickTimer.timerTargetValue);
 					transform.position = Vector3.Lerp(kickedPosition, intendedPosition, timerPercentage);
 				}
 				if(kickTimer.CheckTimer())
@@ -86,7 +87,7 @@ public class CameraKick : MonoBehaviour
 
 		Vector3 variedDir = Quaternion.AngleAxis(angleAmount, Vector3.forward) * direction;
 
-		kickedPosition = intendedPosition + variedDir.normalized * Random.Range(kickMin, kickMax);
+		kickedPosition = intendedPosition + variedDir.normalized * magnitude * Random.Range(kickMin, kickMax);
 	}
 
 	public void KickCamera(Vector3 direction, float magnitude = 1, float radianVariation = -1)
@@ -103,7 +104,7 @@ public class CameraKick : MonoBehaviour
 
 		float angleAmount = Random.Range(-radianVariation, radianVariation);
 		//Debug.Log("Angle Amount\n\t" + angleAmount);
-		Vector3 variedDir = Quaternion.AngleAxis(angleAmount, Vector3.forward) * direction;
+		Vector3 variedDir = Quaternion.AngleAxis(angleAmount, Vector3.forward) * -direction;
 
 		kickedPosition = intendedPosition + variedDir.normalized * Random.Range(kickMin, kickMax);
 	}

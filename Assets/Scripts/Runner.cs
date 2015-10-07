@@ -181,7 +181,7 @@ public class Runner : MonoBehaviour
 		#region Advancement Progression
 		if (transform.position.x >= Cameras[WorldIndex].transform.position.x + 5)
 		{
-			Debug.Log("Advancing Right\n");
+			//Debug.Log("Advancing Right\n");
 			AdvanceRight = true;
 		}
 		else
@@ -403,10 +403,14 @@ public class Runner : MonoBehaviour
 
 	public void AdjustHealth(float healthAdj)
 	{
+		//float kickAmount = Mathf.Min(healthAdj / 10, 2);
+		float kickAmount = healthAdj < -5 ? 1 : .45f;
 		//The Soaked status effect damage prevention.
 		if (statusEffect != 2 || invulnerable)
 		{
-			Cameras[WorldIndex].GetComponent<CameraKick>().KickCameraVariation(Vector3.right, 1.0f);
+			StartCoroutine("SlowMotion", .05f);
+
+			Cameras[WorldIndex].GetComponent<CameraKick>().KickCameraVariation(Vector3.right, kickAmount);
 
 			health += healthAdj;
 			if (health > maxHealth)
@@ -516,11 +520,11 @@ public class Runner : MonoBehaviour
 	IEnumerator BurnDamage()
 	{
 		burning = true;
-		yield return new WaitForSeconds(.25f);
+		yield return new WaitForSeconds(.50f);
 
 		if (statusEffect == 1)
 		{
-			AdjustHealth(-.5f);
+			AdjustHealth(-1f);
 			burning = false;
 		}
 	}
@@ -538,6 +542,14 @@ public class Runner : MonoBehaviour
 	public IEnumerator MicroPause(float time)
 	{
 		float adjusted = 0.01f;
+		Time.timeScale = adjusted;
+		yield return new WaitForSeconds(time * adjusted);
+		Time.timeScale = 1f;
+	}
+
+	public IEnumerator SlowMotion(float time)
+	{
+		float adjusted = 0.25f;
 		Time.timeScale = adjusted;
 		yield return new WaitForSeconds(time * adjusted);
 		Time.timeScale = 1f;
