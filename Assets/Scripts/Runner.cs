@@ -436,12 +436,17 @@ public class Runner : MonoBehaviour
 
 	public void AdjustHealth(float healthAdj)
 	{
+		if (healthAdj < -3)
+		{
+			StartCoroutine("SlowMotion", .25f);
+		}
+
 		//float kickAmount = Mathf.Min(healthAdj / 10, 2);
 		float kickAmount = healthAdj < -5 ? 1 : .45f;
 		//The Soaked status effect damage prevention.
 		if (statusEffect != 2 || invulnerable)
 		{
-			StartCoroutine("SlowMotion", .05f);
+			//StartCoroutine("SlowMotion", .05f);
 
 			Cameras[WorldIndex].GetComponent<CameraKick>().KickCameraVariation(Vector3.right, kickAmount);
 
@@ -585,7 +590,7 @@ public class Runner : MonoBehaviour
 
 	public IEnumerator SlowMotion(float time)
 	{
-		float adjusted = 0.25f;
+		float adjusted = 0.50f;
 		Time.timeScale = adjusted;
 		yield return new WaitForSeconds(time * adjusted);
 		Time.timeScale = 1f;
