@@ -123,6 +123,7 @@ public class AdvancedTimer : ScriptableObject
 
 	public void AdjustTime(float timeToAdjust, bool capAtMax = false, bool disregardNegative = true)
 	{
+		//TODO: Have this appreciate counting upwards or downwards. Only appreciates counting up atm.
 		if (counter + timeToAdjust < 0)
 		{
 			timerComplete = true;
