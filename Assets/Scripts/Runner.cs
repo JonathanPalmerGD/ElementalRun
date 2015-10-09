@@ -9,6 +9,7 @@ public class Runner : MonoBehaviour
 	public static PlatformerCharacter2D platChar;
 	public static Platformer2DUserControl platController;
 
+
 	public AudioSource burnedAudio;
 	public AudioSource soakedAudio;
 	public AudioSource muckedAudio;
@@ -41,6 +42,8 @@ public class Runner : MonoBehaviour
 	public bool burning = false;
 
 	public bool AdvanceRight = false;
+
+	public ForceBlink blinkController;
 
 	private GameObject burnedPrefab;
 	private GameObject soakedPrefab;
@@ -419,6 +422,9 @@ public class Runner : MonoBehaviour
 			muckedAudio = AudioManager.Instance.MakeSource("muckedAudio");
 			muckedAudio.Play();
 			speed = minSpeed;
+
+			platChar.flingDirection = new Vector2(Random.Range(-6.0f, 6.0f), -4);
+			platChar.flingPlayer = true;
 		}
 		if (newStatus == 4)
 		{
@@ -427,6 +433,9 @@ public class Runner : MonoBehaviour
 			gustedAudio = AudioManager.Instance.MakeSource("gustedAudio");
 			gustedAudio.Play();
 			speed = maxSpeed;
+
+			platChar.flingDirection = new Vector2(Random.Range(-6.0f, 6.0f), 4);
+			platChar.flingPlayer = true;
 		}
 
 		//Debug.Log("Status: " + statusEffect + " to " + newStatus +"\n");
@@ -434,8 +443,10 @@ public class Runner : MonoBehaviour
 
 	}
 
-	public void AdjustHealth(float healthAdj)
+	public void AdjustHealth(float healthAdj, int damageType = -1)
 	{
+		blinkController.ExecuteBlink(.01f);
+
 		if (healthAdj < -3)
 		{
 			StartCoroutine("SlowMotion", .25f);
@@ -572,11 +583,13 @@ public class Runner : MonoBehaviour
 
 	public IEnumerator PlayerDeath()
 	{
+		AudioManager.Instance.maxMusicVol = 0;
 		float adjusted = 0.01f;
 		Time.timeScale = adjusted;
-		yield return new WaitForSeconds(.5f * adjusted);
+		yield return new WaitForSeconds(3.5f * adjusted);
 		Time.timeScale = 1f;
 
+		AudioManager.Instance.maxMusicVol = 1;
 		Application.LoadLevel(Application.loadedLevel);
 	}
 

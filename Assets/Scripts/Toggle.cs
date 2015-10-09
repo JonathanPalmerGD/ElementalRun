@@ -33,6 +33,7 @@ public class Toggle : MonoBehaviour
 
 	void OnTriggerEnter2D(Collider2D other)
 	{
+		Debug.Log(other.GetType().ToString() + "\n" + other.name);
 		if (enabled && other.tag == "Player")
 		{
 			GameObject go = GameObject.Instantiate(toggledVisual, transform.position, Quaternion.identity) as GameObject;

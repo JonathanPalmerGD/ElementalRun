@@ -56,20 +56,31 @@ public class Spawner : MonoBehaviour
 	private void StarterPlatforms()
 	{
 		GameObject go;
-		for (int i = 0; i < 7; i++)
+		for (int i = 0; i < 2; i++)
 		{
-			go = GameObject.Instantiate(platformPrefab, spawnPosition.transform.position + Vector3.left * (75 - i * 10), Quaternion.identity) as GameObject;
+			go = GameObject.Instantiate(platformPrefab, spawnPosition.transform.position + Vector3.left * (100 - i * 10), Quaternion.identity) as GameObject;
 			
 			go.transform.SetParent(CreationParent.transform);
 
 			platforms.Add(go);
 		}
+		for (int i = 2; i < 10; i++)
+		{
+			if (i % 2 == 0)
+			{
+				CreatePlatform(platformPrefab, false, (100 - i * 10));
+			}
+		}
 	}
 
-	private void CreatePlatform(GameObject prefab, bool tilt = true)
+	private GameObject CreatePlatform(GameObject prefab, bool tilt = true, float leftOffset = 0)
 	{
-		float randHeight = Random.Range(-.5f, 6.0f);
-		GameObject go = GameObject.Instantiate(prefab, spawnPosition.transform.position + (Vector3.up * randHeight), Quaternion.identity) as GameObject;
+		float randHeight = Random.Range(-1.5f, 9.0f);
+
+		Vector3 verOffset = Vector3.up * randHeight;
+		Vector3 horOffset = Vector3.left * leftOffset;
+
+		GameObject go = GameObject.Instantiate(prefab, spawnPosition.transform.position + verOffset + horOffset, Quaternion.identity) as GameObject;
 
 		go.transform.SetParent(CreationParent.transform);
 
@@ -86,6 +97,8 @@ public class Spawner : MonoBehaviour
 		}
 
 		platforms.Add(go);
+
+		return go;
 	}
 
 	private void CreateToggle()
@@ -193,14 +206,14 @@ public class Spawner : MonoBehaviour
 		if (platformTimer <= 0)
 		{
 			GameObject whichPlatform = platformPrefab;
-			int randCase = Random.Range(0, 10);
-			if (randCase < 3)
+			int randCase = Random.Range(0, 30);
+			if (randCase < 24)
 			{
 				whichPlatform = platformPrefab;
-				platformTimer = platformFreq / Runner.Inst.speed * 18 + Random.Range(-0.25f, 0.25f);
+				platformTimer = platformFreq / Runner.Inst.speed * 20 + Random.Range(-0.25f, 0.25f);
 				CreatePlatform(whichPlatform, true);
 			}
-			else if (randCase < 8)
+			else if (randCase < 27)
 			{
 				whichPlatform = platformLongPrefab;
 				platformTimer = platformFreq / Runner.Inst.speed * 24 + Random.Range(1.25f, 2.05f);
@@ -208,7 +221,7 @@ public class Spawner : MonoBehaviour
 			}
 			else
 			{
-				platformTimer = platformFreq / Runner.Inst.speed * 18 + Random.Range(-0.25f, 0.25f);
+				platformTimer = platformFreq / Runner.Inst.speed * 20 + Random.Range(-0.25f, 0.25f);
 			}
 
 			//platformTimer = platformFreq / Runner.Inst.speed * 18 + Random.Range(-0.25f, 0.25f);

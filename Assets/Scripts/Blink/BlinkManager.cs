@@ -17,7 +17,7 @@ public class BlinkManager : MonoBehaviour
 	public bool[] forceBlink;
 	private bool presentedBlinkYet = false;
 
-	private float blinkDuration = .01f;
+	private float blinkDuration = .1f;
 
 	public float gettingInputStart;
 
@@ -30,7 +30,7 @@ public class BlinkManager : MonoBehaviour
 	void Start() 
 	{
 		timer = ScriptableObject.CreateInstance<AdvancedTimer>();
-		timer.Init(1.5f, -1, true, 0, 1f, false, false, false);
+		timer.Init(1.5f, -1, true, 0, 1.5f, false, false, false);
 
 		score = new float[numTrials];
 		reactionTime = new float[numTrials];
@@ -74,7 +74,7 @@ public class BlinkManager : MonoBehaviour
 		if (running)
 		{
 			#region Present the Blink
-			if (forceBlink[trialIndex] && !presentedBlinkYet && timer.counter <= blinkDuration + .05f)
+			if (forceBlink[trialIndex] && !presentedBlinkYet && timer.counter <= blinkDuration + .00f)
 			{
 				presentedBlinkYet = true;
 				blink.ExecuteBlink(blinkDuration);
