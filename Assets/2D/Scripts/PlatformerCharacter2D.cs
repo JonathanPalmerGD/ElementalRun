@@ -12,10 +12,13 @@ public class PlatformerCharacter2D : MonoBehaviour
 	private Transform m_GroundCheck;    // A position marking where to check if the player is grounded.
 	const float k_GroundedRadius = .2f; // Radius of the overlap circle to determine if grounded
 	private bool m_Grounded;            // Whether or not the player is grounded.
+	private bool m_CanAirJump;        // Whether or not the player has jumped midair.
 	private Transform m_CeilingCheck;   // A position marking where to check for ceilings
 	const float k_CeilingRadius = .01f; // Radius of the overlap circle to determine if the player can stand up
 	private Animator m_Anim;            // Reference to the player's animator component.
 	public Rigidbody2D m_Rigidbody2D;
+	public bool flingPlayer;
+	public Vector2 flingDirection;
 	private bool m_FacingRight = true;  // For determining which way the player is currently facing.
 	private GameObject floor;
 
@@ -40,6 +43,7 @@ public class PlatformerCharacter2D : MonoBehaviour
 			if (colliders[i].gameObject != gameObject)
 			{
 				m_Grounded = true;
+				m_CanAirJump = true;
 				floor = colliders[i].gameObject;
 				//Runner.Inst.transform.SetParent(floor.transform);
 			}
@@ -106,27 +110,53 @@ public class PlatformerCharacter2D : MonoBehaviour
 		
 		if (forceJump)
 		{
-			float downward = m_Rigidbody2D.velocity.y;
-			if (downward < 0)
-			{
-				downward = -downward;
-			}
-			else
-			{
-				downward = 0;
-			}
-
 			m_Rigidbody2D.velocity = new Vector2(0, 4);
-		}
-
-		// If the player should jump...
-		if (m_Grounded && jump && m_Anim.GetBool("Ground") || forceJump)
-		{
-			// Add a vertical force to the player.
+			m_CanAirJump = true;
 			m_Grounded = false;
 			m_Anim.SetBool("Ground", false);
-			m_Rigidbody2D.AddForce(new Vector2(0f, m_JumpForce));
+			m_Rigidbody2D.AddForce(new Vector2(0f, m_JumpForce * 1.25f));
 		}
+		else if(flingPlayer)
+		{
+			m_Rigidbody2D.velocity = new Vector2(0, 0);
+			m_CanAirJump = false;
+			m_Grounded = false;
+			m_Anim.SetBool("Ground", false);
+			m_Rigidbody2D.AddForce(flingDirection * 300);
+			flingPlayer = false;
+			flingDirection = Vector2.zero;
+		}
+		else if (jump)
+		{
+			if (m_Grounded)
+			{
+				Jump();
+			}
+			else if (m_CanAirJump)
+			{
+				m_CanAirJump = false;
+				m_Rigidbody2D.velocity = new Vector2(m_Rigidbody2D.velocity.x, 0);
+
+				Jump();
+			}
+		}
+
+		//// If the player should jump...
+		//if (m_Grounded && jump && m_Anim.GetBool("Ground") || forceJump)
+		//{
+		//	// Add a vertical force to the player.
+		//	m_Grounded = false;
+		//	m_Anim.SetBool("Ground", false);
+		//	m_Rigidbody2D.AddForce(new Vector2(0f, m_JumpForce));
+		//}
+	}
+
+	private void Jump()
+	{
+		// Add a vertical force to the player.
+		m_Grounded = false;
+		m_Anim.SetBool("Ground", false);
+		m_Rigidbody2D.AddForce(new Vector2(0f, m_JumpForce));
 	}
 
 	private void Flip()

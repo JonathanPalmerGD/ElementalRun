@@ -16,11 +16,11 @@ public class Platformer2DUserControl : MonoBehaviour
 
     private void Update()
     {
-        if (!m_Jump)
-        {
-            // Read the jump input in Update so button presses aren'timerPercentage missed.
-            m_Jump = CrossPlatformInputManager.GetButtonDown("Jump");
-        }
+		if (!m_Jump)
+		{
+			// Read the jump input in Update so button presses aren'timerPercentage missed.
+			m_Jump = CrossPlatformInputManager.GetButtonDown("Jump");
+		}
     }
 
     private void FixedUpdate()
