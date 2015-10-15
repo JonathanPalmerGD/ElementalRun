@@ -8,15 +8,22 @@ public class PlatformerCharacter2D : MonoBehaviour
 	[Range(0, 1)] [SerializeField] private float m_CrouchSpeed = .36f;  // Amount of maxSpeed applied to crouching movement. 1 = 100%
 	[SerializeField] private bool m_AirControl = false;                 // Whether or not a player can steer while jumping;
 	[SerializeField] private LayerMask m_WhatIsGround;                  // A mask determining what is ground to the character
+	
 
 	private Transform m_GroundCheck;    // A position marking where to check if the player is grounded.
 	const float k_GroundedRadius = .2f; // Radius of the overlap circle to determine if grounded
 	private bool m_Grounded;            // Whether or not the player is grounded.
 	private bool m_CanAirJump;        // Whether or not the player has jumped midair.
 	private Transform m_CeilingCheck;   // A position marking where to check for ceilings
-	const float k_CeilingRadius = .01f; // Radius of the overlap circle to determine if the player can stand up
+	const float k_CeilingRadius = .75f; // Radius of the overlap circle to determine if the player can stand up
+	const float ceilingDist = 3.55f;
+	const float floorDist = 1f;
 	private Animator m_Anim;            // Reference to the player's animator component.
+	public Vector2 boxCastSize;
+	public Vector2 boxCastDown; 
 	public Rigidbody2D m_Rigidbody2D;
+	public Collider2D upperBody;
+	public Collider2D lowerBody;
 	public bool flingPlayer;
 	public Vector2 flingDirection;
 	private bool m_FacingRight = true;  // For determining which way the player is currently facing.
@@ -34,20 +41,47 @@ public class PlatformerCharacter2D : MonoBehaviour
 	private void FixedUpdate()
 	{
 		m_Grounded = false;
+		Collider2D[] colliders;
+
+		RaycastHit2D[] rayhit = Physics2D.BoxCastAll(m_CeilingCheck.transform.position, boxCastSize, 0, Vector2.up, ceilingDist, m_WhatIsGround);
+		for (int i = 0; i < rayhit.Length; i++)
+		{
+			if (rayhit[i].collider.gameObject != gameObject && rayhit[i].collider.gameObject.tag != "Player")
+			{
+				Physics2D.IgnoreCollision(upperBody, rayhit[i].collider, true);
+				Physics2D.IgnoreCollision(lowerBody, rayhit[i].collider, true);
+			}
+		}
+
+		rayhit = Physics2D.BoxCastAll(m_GroundCheck.transform.position, boxCastDown, 0, Vector2.down, floorDist, m_WhatIsGround);
+		for (int i = 0; i < rayhit.Length; i++)
+		{
+			if (rayhit[i].collider.gameObject != gameObject && rayhit[i].collider.gameObject.tag != "Player")
+			{
+				Physics2D.IgnoreCollision(upperBody, rayhit[i].collider, false);
+				Physics2D.IgnoreCollision(lowerBody, rayhit[i].collider, false);
+				m_Grounded = true;
+				m_CanAirJump = true;
+				floor = rayhit[i].collider.gameObject;
+			}
+		}
+
 
 		// The player is grounded if a circlecast to the groundcheck position hits anything designated as ground
 		// This can be done using layers instead but Sample Assets will not overwrite your project settings.
-		Collider2D[] colliders = Physics2D.OverlapCircleAll(m_GroundCheck.position, k_GroundedRadius, m_WhatIsGround);
-		for (int i = 0; i < colliders.Length; i++)
-		{
-			if (colliders[i].gameObject != gameObject)
-			{
-				m_Grounded = true;
-				m_CanAirJump = true;
-				floor = colliders[i].gameObject;
-				//Runner.Inst.transform.SetParent(floor.transform);
-			}
-		}
+		//colliders = Physics2D.OverlapCircleAll(m_GroundCheck.position, k_GroundedRadius, m_WhatIsGround);
+		//for (int i = 0; i < colliders.Length; i++)
+		//{
+		//	if (colliders[i].gameObject != gameObject && colliders[i].tag != "Player")
+		//	{
+		//		Physics2D.IgnoreCollision(upperBody, colliders[i], false);
+		//		Physics2D.IgnoreCollision(lowerBody, colliders[i], false);
+		//		m_Grounded = true;
+		//		m_CanAirJump = true;
+		//		floor = colliders[i].gameObject;
+		//		//Runner.Inst.transform.SetParent(floor.transform);
+		//	}
+		//}
 
 		if (!m_Grounded)
 		{
@@ -114,7 +148,7 @@ public class PlatformerCharacter2D : MonoBehaviour
 			m_CanAirJump = true;
 			m_Grounded = false;
 			m_Anim.SetBool("Ground", false);
-			m_Rigidbody2D.AddForce(new Vector2(0f, m_JumpForce * 1.25f));
+			m_Rigidbody2D.AddForce(new Vector2(0f, m_JumpForce * 1.65f));
 		}
 		else if(flingPlayer)
 		{

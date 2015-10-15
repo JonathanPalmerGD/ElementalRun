@@ -8,6 +8,8 @@ public class Spawner : MonoBehaviour
 	public GameObject platformLongPrefab;
 	public GameObject togglePrefab;
 	public GameObject obstaclePrefab;
+	public GameObject[] forcingObstaclePrefab;
+	public GameObject parallaxPrefab;
 	public int worldIndex;
 
 	public static bool fireEnabled = true;
@@ -22,6 +24,7 @@ public class Spawner : MonoBehaviour
 	public List<GameObject> platforms;
 	public List<Toggle> toggles;
 	public List<Obstacle> obstacles;
+	public List<ParallaxObject> parallax;
 
 	public float speedModifier = 0;
 
@@ -31,6 +34,10 @@ public class Spawner : MonoBehaviour
 	private float obstacleFreq = 4.5f;
 	public float toggleTimer = 0;
 	private float toggleFreq = 3.0f;
+	public float paraTimer = 0;
+	private float paraFreq = 3.0f;
+
+	private int counter;
 
 	void Start() 
 	{
@@ -38,13 +45,23 @@ public class Spawner : MonoBehaviour
 		platformLongPrefab = Resources.Load<GameObject>("Objects/PlatformLong");
 		togglePrefab = Resources.Load<GameObject>("Objects/Toggle");
 		obstaclePrefab = Resources.Load<GameObject>("Objects/Obstacle");
+		parallaxPrefab = Resources.Load<GameObject>("Objects/Parallax");
+
+		forcingObstaclePrefab = new GameObject[4];
+
+		forcingObstaclePrefab[0] = Resources.Load<GameObject>("Objects/FireForce");
+		forcingObstaclePrefab[1] = Resources.Load<GameObject>("Objects/WaterForce");
+		forcingObstaclePrefab[2] = Resources.Load<GameObject>("Objects/EarthForce");
+		forcingObstaclePrefab[3] = Resources.Load<GameObject>("Objects/AirForce");
 
 		platforms = new List<GameObject>();
 		toggles = new List<Toggle>();
 		obstacles = new List<Obstacle>();
+		parallax = new List<ParallaxObject>();
 
 		toggleTimer = toggleFreq;
 		obstacleTimer = obstacleFreq;
+		paraTimer = paraFreq;
 		//Create base platforms to use?
 		
 		CreationParent = new GameObject();
@@ -129,6 +146,35 @@ public class Spawner : MonoBehaviour
 		obstacles.Add(obst);
 	}
 
+	private void CreateForcingObstacle()
+	{
+		GameObject go = GameObject.Instantiate(forcingObstaclePrefab[worldIndex], spawnPosition.transform.position, Quaternion.identity) as GameObject;
+		go.transform.SetParent(CreationParent.transform);
+		Obstacle obst = go.GetComponent<Obstacle>();
+
+		obst.obType = Obstacle.ObstacleType.ForceSwitch;
+
+		obst.affiliation = (Obstacle.Element)worldIndex;
+
+		obstacles.Add(obst);
+	}
+
+	private void CreateParallaxObject(float timeAdjustment)
+	{
+		float randHeight = Random.Range(0, 15);
+		float randDepth = Random.Range(1, 5);
+		GameObject go = GameObject.Instantiate(parallaxPrefab, spawnPosition.transform.position + (Vector3.up * randHeight) + Vector3.forward * randDepth, Quaternion.identity) as GameObject;
+		go.transform.SetParent(CreationParent.transform);
+		go.transform.localScale = new Vector3(8, 8, 8);
+		ParallaxObject para = go.GetComponent<ParallaxObject>();
+
+		para.zBack = randDepth;
+
+		//para.affiliation = (Obstacle.Element)random;
+
+		parallax.Add(para);
+	}
+
 	private void MovePlatforms(float timeAdjustment)
 	{
 		for (int i = 0; i < platforms.Count; i++)
@@ -198,10 +244,20 @@ public class Spawner : MonoBehaviour
 		}
 	}
 
+	private void MoveParallax(float timeAdjustment)
+	{
+		for (int i = 0; i < parallax.Count; i++)
+		{
+			float rateAdj = parallax[i].zBack * 5;
+			parallax[i].transform.position -= Vector3.right * timeAdjustment * rateAdj;
+		}
+	}
+
 	private void UpdateWorld(float timeAdjustment)
 	{
 		speedModifier += timeAdjustment / 10;
 
+		#region Platform Creation
 		platformTimer -= timeAdjustment;
 		if (platformTimer <= 0)
 		{
@@ -226,26 +282,54 @@ public class Spawner : MonoBehaviour
 
 			//platformTimer = platformFreq / Runner.Inst.speed * 18 + Random.Range(-0.25f, 0.25f);
 		}
+		#endregion
 
+		#region Toggle Creation
 		toggleTimer -= timeAdjustment;
 		if (toggleTimer <= 0)
 		{
 			toggleTimer = toggleFreq + Random.Range(-2.1f, 2.1f);
 			CreateToggle();
 		}
+		#endregion
 
+		#region Obstacle Creation
 		obstacleTimer -= timeAdjustment;
 		if (obstacleTimer <= 0)
 		{
 			obstacleTimer = obstacleFreq + Random.Range(-2.1f, 2.1f);
-			CreateObstacle();
+
+			int randCase = Random.Range(0, 30);
+			randCase += (worldIndex == Runner.Inst.WorldIndex) ? counter : 0;
+			//Debug.Log(randCase + "\n");
+			if (randCase < 28)
+			{
+				counter += 2;
+				CreateObstacle();
+			}
+			else
+			{
+				counter = 0;
+				CreateForcingObstacle();
+			}
 		}
+		#endregion
+
+		#region Parallax Creation
+		paraTimer -= timeAdjustment;
+		if (paraTimer <= 0)
+		{
+			paraTimer = paraFreq + Random.Range(-2.1f, 2.1f);
+			//CreateParallaxObject(timeAdjustment);
+		}
+		#endregion
 
 		//if (Runner.Inst.AdvanceRight)
 		//{
-			MovePlatforms(timeAdjustment);
-			MoveToggles(timeAdjustment);
-			MoveObstacles(timeAdjustment);
+		MovePlatforms(timeAdjustment);
+		MoveToggles(timeAdjustment);
+		MoveObstacles(timeAdjustment);
+		MoveParallax(timeAdjustment);
 		//}
 	}
 
