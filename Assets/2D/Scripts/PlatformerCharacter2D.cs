@@ -7,7 +7,7 @@ public class PlatformerCharacter2D : MonoBehaviour
 	[SerializeField] private float m_JumpForce = 400f;                  // Amount of force added when the player jumps.
 	[Range(0, 1)] [SerializeField] private float m_CrouchSpeed = .36f;  // Amount of maxSpeed applied to crouching movement. 1 = 100%
 	[SerializeField] private bool m_AirControl = false;                 // Whether or not a player can steer while jumping;
-	[SerializeField] private LayerMask m_WhatIsGround;                  // A mask determining what is ground to the character
+	[SerializeField] public LayerMask m_WhatIsGround;                  // A mask determining what is ground to the character
 	
 
 	private Transform m_GroundCheck;    // A position marking where to check if the player is grounded.
@@ -16,8 +16,8 @@ public class PlatformerCharacter2D : MonoBehaviour
 	private bool m_CanAirJump;        // Whether or not the player has jumped midair.
 	private Transform m_CeilingCheck;   // A position marking where to check for ceilings
 	const float k_CeilingRadius = .75f; // Radius of the overlap circle to determine if the player can stand up
-	const float ceilingDist = 3.55f;
-	const float floorDist = 1f;
+	const float ceilingDist = 4.0f;
+	const float floorDist = 2.0f;
 	private Animator m_Anim;            // Reference to the player's animator component.
 	public Vector2 boxCastSize;
 	public Vector2 boxCastDown; 
@@ -48,6 +48,8 @@ public class PlatformerCharacter2D : MonoBehaviour
 		{
 			if (rayhit[i].collider.gameObject != gameObject && rayhit[i].collider.gameObject.tag != "Player")
 			{
+				//Debug.Log(rayhit[i].collider.name + "\n" + rayhit[i].collider.gameObject.layer);
+				//Debug.DrawLine(m_CeilingCheck.transform.position, rayhit[i].collider.transform.position, Color.black, 1.0f);
 				Physics2D.IgnoreCollision(upperBody, rayhit[i].collider, true);
 				Physics2D.IgnoreCollision(lowerBody, rayhit[i].collider, true);
 			}
@@ -58,6 +60,8 @@ public class PlatformerCharacter2D : MonoBehaviour
 		{
 			if (rayhit[i].collider.gameObject != gameObject && rayhit[i].collider.gameObject.tag != "Player")
 			{
+				//Debug.DrawLine(m_GroundCheck.transform.position, rayhit[i].collider.transform.position, Color.green, 1.0f);
+
 				Physics2D.IgnoreCollision(upperBody, rayhit[i].collider, false);
 				Physics2D.IgnoreCollision(lowerBody, rayhit[i].collider, false);
 				m_Grounded = true;

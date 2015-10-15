@@ -18,6 +18,8 @@ public class Runner : MonoBehaviour
 	private float maxHeight = .7f;
 	private float minHeight = .1f;
 
+	private float shiftCooldown = .75f;
+
 	private float[] yAbove = { .9f, .2f, .1f, 0 };
 	private float[] yEqual = { .3f, .2f, .1f, 0 };
 	private float[] yBelow = { .9f, .8f, .7f, 0 };
@@ -37,9 +39,13 @@ public class Runner : MonoBehaviour
 	public float MaxSpeed { get { return maxSpeed; } }
 	private float minSpeed = 10;
 
+	public AdvancedTimer shiftTimer;
+
 	public int statusEffect = 0;
 	public float statusLength = 0.0f;
 	public bool burning = false;
+	public bool mucked = false;
+	public bool gusted = false;
 
 	public bool AdvanceRight = false;
 
@@ -129,6 +135,9 @@ public class Runner : MonoBehaviour
 
 		WorldIndex = 0;
 
+		shiftTimer = ScriptableObject.CreateInstance<AdvancedTimer>();
+		shiftTimer.Init(shiftCooldown,-1, true, 0,0, false, false);
+
 		healthSlider.maxValue = maxHealth;
 		healthSlider.value = health;
 
@@ -136,7 +145,8 @@ public class Runner : MonoBehaviour
 		speedSlider.minValue = minSpeed;
 		speedSlider.value = speed;
 
-		speed = minSpeed;
+		speed = (maxSpeed + minSpeed) / 2;
+		//speed = minSpeed;
 
 		Lanes = new GameObject[4,4];
 
@@ -184,6 +194,14 @@ public class Runner : MonoBehaviour
 		{
 			StartCoroutine(BurnDamage());
 		}
+		if (statusEffect == 3 && !mucked)
+		{
+			StartCoroutine(MuckDown());
+		}
+		if (statusEffect == 4 && !gusted)
+		{
+			StartCoroutine(GustUp());
+		}
 		#endregion
 
 		#region Advancement Progression
@@ -199,6 +217,8 @@ public class Runner : MonoBehaviour
 		}
 		#endregion
 
+		shiftTimer.CheckTimer();
+		shiftTimer.UpdateTimer(Time.deltaTime);
 		//Debug.Log("W Index:" + WorldIndex + "\n");
 		score[WorldIndex] += Time.deltaTime;
 		
@@ -214,32 +234,38 @@ public class Runner : MonoBehaviour
 		#region L/R Lane Shifting
 		if (Input.GetKeyDown(KeyCode.UpArrow))
 		{
-			int newWorld = WorldIndex - 1;
-			if (newWorld == -1)
+			if (!shiftTimer.Running)
 			{
-				PhaseShift(3);
-			}
-			else
-			{
-				PhaseShift(newWorld);
+				int newWorld = WorldIndex - 1;
+				if (newWorld == -1)
+				{
+					PhaseShift(3);
+				}
+				else
+				{
+					PhaseShift(newWorld);
+				}
 			}
 		}
 		if (Input.GetKeyDown(KeyCode.DownArrow))
 		{
-			PhaseShift((WorldIndex + 1) % 4);
+			if (!shiftTimer.Running)
+			{
+				PhaseShift((WorldIndex + 1) % 4);
+			}
 		}
 		#endregion
 
 		#region Speed Adjustment Effect Changing
-		if (Input.GetKey(KeyCode.LeftArrow))
+		/*if (Input.GetKey(KeyCode.LeftArrow))
 		{
 			AdjustSpeed(-2.5f * Time.deltaTime);
-
 		}
+
 		if (Input.GetKey(KeyCode.RightArrow))
 		{
 			AdjustSpeed(2.5f * Time.deltaTime);
-		}
+		}*/
 		#endregion
 
 		#region Status Effect Changing
@@ -398,7 +424,7 @@ public class Runner : MonoBehaviour
 		}
 		else
 		{
-			statusLength = 5.0f;
+			statusLength = 8.0f;
 		}
 		if (newStatus == 1)
 		{
@@ -421,7 +447,8 @@ public class Runner : MonoBehaviour
 			statusUI.text = "Mucked";
 			muckedAudio = AudioManager.Instance.MakeSource("muckedAudio");
 			muckedAudio.Play();
-			speed = minSpeed;
+			mucked = false;
+			//speed = minSpeed;
 
 			platChar.flingDirection = new Vector2(Random.Range(-6.0f, 6.0f), -4);
 			platChar.flingPlayer = true;
@@ -432,7 +459,8 @@ public class Runner : MonoBehaviour
 			statusUI.text = "Gusted";
 			gustedAudio = AudioManager.Instance.MakeSource("gustedAudio");
 			gustedAudio.Play();
-			speed = maxSpeed;
+			gusted = false;
+			//speed = maxSpeed;
 
 			platChar.flingDirection = new Vector2(Random.Range(-6.0f, 6.0f), 4);
 			platChar.flingPlayer = true;
@@ -538,6 +566,7 @@ public class Runner : MonoBehaviour
 
 	public void PhaseShift(int targetPlane)
 	{
+		shiftTimer.Reset(true);
 		if (targetPlane >= 0 && targetPlane < 4)
 		{
 			AudioManager.Instance.MakeSource("PhaseShift").Play();
@@ -576,8 +605,38 @@ public class Runner : MonoBehaviour
 
 		if (statusEffect == 1)
 		{
-			AdjustHealth(-1f);
+			AdjustHealth(-.5f);
 			burning = false;
+		}
+	}
+
+	IEnumerator MuckDown()
+	{
+		mucked = true;
+		//AudioManager.Instance.MakeSource("Burn").Play();
+		yield return new WaitForSeconds(Random.Range(.65f, 1.25f));
+
+		//Debug.Log("Mucking down\n");
+		if (statusEffect == 3)
+		{
+			platChar.flingDirection = new Vector2(Random.Range(-5.0f, 0.0f), -2);
+			platChar.flingPlayer = true;
+			mucked = false;
+		}
+	}
+
+	IEnumerator GustUp()
+	{
+		gusted = true;
+		//AudioManager.Instance.MakeSource("Burn").Play();
+		yield return new WaitForSeconds(Random.Range(.85f, 1.75f));
+		
+		//Debug.Log("Gusting Up\n");
+		if (statusEffect == 4)
+		{
+			platChar.flingDirection = new Vector2(Random.Range(0.0f, 5.0f), 3);
+			platChar.flingPlayer = true;
+			gusted = false;
 		}
 	}
 

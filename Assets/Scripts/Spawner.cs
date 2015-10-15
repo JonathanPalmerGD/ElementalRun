@@ -25,7 +25,7 @@ public class Spawner : MonoBehaviour
 	public List<Toggle> toggles;
 	public List<Obstacle> obstacles;
 	public List<ParallaxObject> parallax;
-
+	
 	public float speedModifier = 0;
 
 	public float platformTimer = 0;
@@ -37,7 +37,7 @@ public class Spawner : MonoBehaviour
 	public float paraTimer = 0;
 	private float paraFreq = 3.0f;
 
-	private int counter;
+	private int forceSwitchCounter;
 
 	void Start() 
 	{
@@ -162,7 +162,7 @@ public class Spawner : MonoBehaviour
 	private void CreateParallaxObject(float timeAdjustment)
 	{
 		float randHeight = Random.Range(0, 15);
-		float randDepth = Random.Range(1, 5);
+		float randDepth = Random.Range(1, 2);
 		GameObject go = GameObject.Instantiate(parallaxPrefab, spawnPosition.transform.position + (Vector3.up * randHeight) + Vector3.forward * randDepth, Quaternion.identity) as GameObject;
 		go.transform.SetParent(CreationParent.transform);
 		go.transform.localScale = new Vector3(8, 8, 8);
@@ -263,7 +263,13 @@ public class Spawner : MonoBehaviour
 		{
 			GameObject whichPlatform = platformPrefab;
 			int randCase = Random.Range(0, 30);
-			if (randCase < 24)
+			if (randCase < 10)
+			{
+				whichPlatform = platformPrefab;
+				platformTimer = platformFreq / Runner.Inst.speed * 20 + Random.Range(-0.25f, 0.25f);
+				CreatePlatform(whichPlatform, false);
+			}
+			else if (randCase < 24)
 			{
 				whichPlatform = platformPrefab;
 				platformTimer = platformFreq / Runner.Inst.speed * 20 + Random.Range(-0.25f, 0.25f);
@@ -300,16 +306,16 @@ public class Spawner : MonoBehaviour
 			obstacleTimer = obstacleFreq + Random.Range(-2.1f, 2.1f);
 
 			int randCase = Random.Range(0, 30);
-			randCase += (worldIndex == Runner.Inst.WorldIndex) ? counter : 0;
+			randCase += (worldIndex == Runner.Inst.WorldIndex) ? forceSwitchCounter : 0;
 			//Debug.Log(randCase + "\n");
 			if (randCase < 28)
 			{
-				counter += 2;
+				forceSwitchCounter += 2;
 				CreateObstacle();
 			}
 			else
 			{
-				counter = 0;
+				forceSwitchCounter = 0;
 				CreateForcingObstacle();
 			}
 		}
