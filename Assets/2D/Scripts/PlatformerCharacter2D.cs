@@ -4,7 +4,7 @@ using UnityEngine;
 public class PlatformerCharacter2D : MonoBehaviour
 {
 	[SerializeField] private float m_MaxSpeed = 10f;                    // The fastest the player can travel in the x axis.
-	[SerializeField] private float m_JumpForce = 400f;                  // Amount of force added when the player jumps.
+	//[SerializeField] private float m_JumpForce = 400f;                  // Amount of force added when the player jumps.
 	[Range(0, 1)] [SerializeField] private float m_CrouchSpeed = .36f;  // Amount of maxSpeed applied to crouching movement. 1 = 100%
 	[SerializeField] private bool m_AirControl = false;                 // Whether or not a player can steer while jumping;
 	[SerializeField] public LayerMask m_WhatIsGround;                  // A mask determining what is ground to the character
@@ -12,8 +12,9 @@ public class PlatformerCharacter2D : MonoBehaviour
 
 	private Transform m_GroundCheck;    // A position marking where to check if the player is grounded.
 	const float k_GroundedRadius = .2f; // Radius of the overlap circle to determine if grounded
-	private bool m_Grounded;            // Whether or not the player is grounded.
-	private bool m_CanAirJump;        // Whether or not the player has jumped midair.
+	//private bool m_Grounded;            // Whether or not the player is grounded.
+	private int numJumpsMade = 0;
+	//private bool m_CanAirJump;        // Whether or not the player has jumped midair.
 	private Transform m_CeilingCheck;   // A position marking where to check for ceilings
 	const float k_CeilingRadius = .75f; // Radius of the overlap circle to determine if the player can stand up
 	const float ceilingDist = 4.0f;
@@ -40,7 +41,8 @@ public class PlatformerCharacter2D : MonoBehaviour
 
 	private void FixedUpdate()
 	{
-		m_Grounded = false;
+		//numJumpsMade = -1;
+
 		Collider2D[] colliders;
 
 		RaycastHit2D[] rayhit = Physics2D.BoxCastAll(m_CeilingCheck.transform.position, boxCastSize, 0, Vector2.up, ceilingDist, m_WhatIsGround);
@@ -64,8 +66,9 @@ public class PlatformerCharacter2D : MonoBehaviour
 
 				Physics2D.IgnoreCollision(upperBody, rayhit[i].collider, false);
 				Physics2D.IgnoreCollision(lowerBody, rayhit[i].collider, false);
-				m_Grounded = true;
-				m_CanAirJump = true;
+
+				numJumpsMade = 0;
+				//m_CanAirJump = true;
 				floor = rayhit[i].collider.gameObject;
 			}
 		}
@@ -87,12 +90,15 @@ public class PlatformerCharacter2D : MonoBehaviour
 		//	}
 		//}
 
-		if (!m_Grounded)
+
+		//if (!m_Grounded)
+		if (numJumpsMade > 0)
 		{
+	
 			//Runner.Inst.transform.SetParent(null);
 			floor = null;
 		}
-		m_Anim.SetBool("Ground", m_Grounded);
+		m_Anim.SetBool("Ground", numJumpsMade == 0);
 
 		// Set the vertical animation
 		m_Anim.SetFloat("vSpeed", m_Rigidbody2D.velocity.y);
@@ -114,7 +120,7 @@ public class PlatformerCharacter2D : MonoBehaviour
 		m_Anim.SetBool("Crouch", crouch);
 
 		//only control the player if grounded or airControl is turned on
-		if (m_Grounded || m_AirControl)
+		if (numJumpsMade == 0 || m_AirControl)
 		{
 			// Reduce the speed if crouching by the crouchSpeed multiplier
 			move = (crouch ? move*m_CrouchSpeed : move);
@@ -149,16 +155,19 @@ public class PlatformerCharacter2D : MonoBehaviour
 		if (forceJump)
 		{
 			m_Rigidbody2D.velocity = new Vector2(0, 4);
-			m_CanAirJump = true;
-			m_Grounded = false;
+			//m_CanAirJump = true;
+			numJumpsMade = 1;
 			m_Anim.SetBool("Ground", false);
-			m_Rigidbody2D.AddForce(new Vector2(0f, m_JumpForce * 1.65f));
+			m_Rigidbody2D.AddForce(new Vector2(0f, Runner.Inst.GetPlaneMechanics().jumpForce * 1.65f));
 		}
 		else if(flingPlayer)
 		{
 			m_Rigidbody2D.velocity = new Vector2(0, 0);
-			m_CanAirJump = false;
-			m_Grounded = false;
+			//m_CanAirJump = false;
+			if (numJumpsMade < Runner.Inst.GetPlaneMechanics().jumpsAllowed)
+			{
+				numJumpsMade = Runner.Inst.GetPlaneMechanics().jumpsAllowed;
+			}
 			m_Anim.SetBool("Ground", false);
 			m_Rigidbody2D.AddForce(flingDirection * 300);
 			flingPlayer = false;
@@ -166,14 +175,17 @@ public class PlatformerCharacter2D : MonoBehaviour
 		}
 		else if (jump)
 		{
-			if (m_Grounded)
+			//if (m_Grounded)
+			//{
+			///	Jump();
+			//}
+			Debug.Log("Attempting to jump\n" + numJumpsMade + " < " + Runner.Inst.GetPlaneMechanics().jumpsAllowed + "  " + (numJumpsMade < Runner.Inst.GetPlaneMechanics().jumpsAllowed) + "\n");
+			if(numJumpsMade < Runner.Inst.GetPlaneMechanics().jumpsAllowed)
 			{
-				Jump();
-			}
-			else if (m_CanAirJump)
-			{
-				m_CanAirJump = false;
-				m_Rigidbody2D.velocity = new Vector2(m_Rigidbody2D.velocity.x, 0);
+				if (numJumpsMade > 0)
+				{
+					m_Rigidbody2D.velocity = new Vector2(m_Rigidbody2D.velocity.x, 0);
+				}
 
 				Jump();
 			}
@@ -192,9 +204,12 @@ public class PlatformerCharacter2D : MonoBehaviour
 	private void Jump()
 	{
 		// Add a vertical force to the player.
-		m_Grounded = false;
+
+		numJumpsMade++;
 		m_Anim.SetBool("Ground", false);
-		m_Rigidbody2D.AddForce(new Vector2(0f, m_JumpForce));
+		Debug.Log(Runner.Inst.GetPlaneMechanics().jumpForce);
+		//m_Rigidbody2D.AddForce(new Vector2(0f, 400));
+		m_Rigidbody2D.AddForce(new Vector2(0f, Runner.Inst.GetPlaneMechanics().jumpForce));
 	}
 
 	private void Flip()

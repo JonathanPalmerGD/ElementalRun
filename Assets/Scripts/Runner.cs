@@ -69,6 +69,8 @@ public class Runner : MonoBehaviour
 
 	#region Lane and World Info
 	public Camera[] Cameras;
+	public Spawner[] Spawners;
+	public PlaneMechanics[] PlaneMechanics;
 	public CameraKick[] Kicks;
 	public GameObject[,] Lanes;
 	public int WorldIndex;
@@ -164,6 +166,20 @@ public class Runner : MonoBehaviour
 		PhaseShift(Random.Range(0, 3));
 		SetCameras();
 
+	}
+
+	public PlaneMechanics GetPlaneMechanics(int planeIndex = -1)
+	{
+		if (planeIndex == -1)
+		{
+			//Debug.Log(PlaneMechanics.Length);
+			return PlaneMechanics[WorldIndex];
+		}
+		if (planeIndex > 3)
+		{
+			Debug.LogError("Invalid Plane Mechanic request: " + planeIndex + "\n");
+		}
+		return PlaneMechanics[planeIndex];
 	}
 
 	void Update()
