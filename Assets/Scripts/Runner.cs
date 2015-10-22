@@ -44,6 +44,7 @@ public class Runner : MonoBehaviour
 	public int statusEffect = 0;
 	public float statusLength = 0.0f;
 	public bool burning = false;
+	public bool soaked = false;
 	public bool mucked = false;
 	public bool gusted = false;
 
@@ -75,10 +76,10 @@ public class Runner : MonoBehaviour
 	#endregion
 
 	#region UI Elements
-	public Text statusUI;
+	//public Text statusUI;
 	public Text scoreUI;
 	public Slider healthSlider;
-	public Slider speedSlider;
+	//public Slider speedSlider;
 	#endregion
 
 	#region Particle Control
@@ -141,9 +142,9 @@ public class Runner : MonoBehaviour
 		healthSlider.maxValue = maxHealth;
 		healthSlider.value = health;
 
-		speedSlider.maxValue = maxSpeed;
-		speedSlider.minValue = minSpeed;
-		speedSlider.value = speed;
+		//speedSlider.maxValue = maxSpeed;
+		//speedSlider.minValue = minSpeed;
+		//speedSlider.value = speed;
 
 		speed = (maxSpeed + minSpeed) / 2;
 		//speed = minSpeed;
@@ -160,7 +161,9 @@ public class Runner : MonoBehaviour
 			}
 		}
 
+		PhaseShift(Random.Range(0, 3));
 		SetCameras();
+
 	}
 
 	void Update()
@@ -168,7 +171,7 @@ public class Runner : MonoBehaviour
 		GetInput();
 
 		#region UpdateSpeed
-		speedSlider.value = speed;
+		//speedSlider.value = speed;
 		#endregion
 
 		#region Invulnerability
@@ -193,6 +196,10 @@ public class Runner : MonoBehaviour
 		if (statusEffect == 1 && !burning)
 		{
 			StartCoroutine(BurnDamage());
+		}
+		if (statusEffect == 2 && !soaked)
+		{
+			StartCoroutine(SoakedHeal());
 		}
 		if (statusEffect == 3 && !mucked)
 		{
@@ -222,6 +229,11 @@ public class Runner : MonoBehaviour
 		//Debug.Log("W Index:" + WorldIndex + "\n");
 		score[WorldIndex] += Time.deltaTime;
 		
+	}
+
+	public void GainScore(float value, int index)
+	{
+		score[index] += value;
 	}
 
 	public void GetInput()
@@ -420,7 +432,7 @@ public class Runner : MonoBehaviour
 
 		if (newStatus == 0)
 		{
-			statusUI.text = "";
+			//statusUI.text = "";
 		}
 		else
 		{
@@ -429,7 +441,7 @@ public class Runner : MonoBehaviour
 		if (newStatus == 1)
 		{
 			burnedParticle.SetActive(true);
-			statusUI.text = "Burning";
+			//statusUI.text = "Burning";
 			burnedAudio = AudioManager.Instance.MakeSource("burnedAudio");
 			burnedAudio.Play();
 			burning = false;
@@ -437,14 +449,15 @@ public class Runner : MonoBehaviour
 		if (newStatus == 2)
 		{
 			soakedParticle.SetActive(true);
-			statusUI.text = "Soaked";
+			//statusUI.text = "Soaked";
 			soakedAudio = AudioManager.Instance.MakeSource("soakedAudio");
 			soakedAudio.Play();
+			soaked = false;
 		}
 		if (newStatus == 3)
 		{
 			muckedParticle.SetActive(true);
-			statusUI.text = "Mucked";
+			//statusUI.text = "Mucked";
 			muckedAudio = AudioManager.Instance.MakeSource("muckedAudio");
 			muckedAudio.Play();
 			mucked = false;
@@ -456,7 +469,7 @@ public class Runner : MonoBehaviour
 		if (newStatus == 4)
 		{
 			gustedParticle.SetActive(true);
-			statusUI.text = "Gusted";
+			//statusUI.text = "Gusted";
 			gustedAudio = AudioManager.Instance.MakeSource("gustedAudio");
 			gustedAudio.Play();
 			gusted = false;
@@ -473,21 +486,28 @@ public class Runner : MonoBehaviour
 
 	public void AdjustHealth(float healthAdj, int damageType = -1)
 	{
-		blinkController.ExecuteBlink(.01f);
-
-		if (healthAdj < -3)
+		float kickAmount = 0;
+		if (healthAdj < 0)
 		{
-			StartCoroutine("SlowMotion", .25f);
+			blinkController.ExecuteBlink(.01f);
+
+			if (healthAdj < -3)
+			{
+				StartCoroutine("SlowMotion", .25f);
+			}
+
+			kickAmount = healthAdj < -5 ? 1 : .45f;
 		}
 
-		//float kickAmount = Mathf.Min(healthAdj / 10, 2);
-		float kickAmount = healthAdj < -5 ? 1 : .45f;
 		//The Soaked status effect damage prevention.
-		if (statusEffect != 2 || invulnerable)
+		if (!invulnerable)
 		{
-			//StartCoroutine("SlowMotion", .05f);
-
-			Cameras[WorldIndex].GetComponent<CameraKick>().KickCameraVariation(Vector3.right, kickAmount);
+			//Debug.Log("Adjusting health by \t" + healthAdj + "\n");
+			
+			if (kickAmount > 0)
+			{
+				Cameras[WorldIndex].GetComponent<CameraKick>().KickCameraVariation(Vector3.right, kickAmount);
+			}
 
 			health += healthAdj;
 			if (health > maxHealth)
@@ -505,7 +525,7 @@ public class Runner : MonoBehaviour
 				//Application.LoadLevel(Application.loadedLevel);
 			}
 		}
-		else
+		else if(invulnerable)
 		{
 			statusEffect = 0;
 		}
@@ -607,6 +627,19 @@ public class Runner : MonoBehaviour
 		{
 			AdjustHealth(-.5f);
 			burning = false;
+		}
+	}
+
+	IEnumerator SoakedHeal()
+	{
+		soaked = true;
+		yield return new WaitForSeconds(.50f);
+
+		if (statusEffect == 2)
+		{
+			//Debug.Log("Healing\n");
+			AdjustHealth(.5f);
+			soaked = false;
 		}
 	}
 

@@ -52,6 +52,7 @@ public class Toggle : MonoBehaviour
 
 			Runner.Inst.KickPlayerCamera(Vector3.up, .7f);
 			//Runner.Inst.Kicks[Runner.Inst.WorldIndex].KickCamera(Vector3.up * .1f);
+			Runner.Inst.GainScore(.25f, (int)affiliation);
 
 			obstacleEnabled[(int)affiliation] = !obstacleEnabled[(int)affiliation];
 			enabled = false;
