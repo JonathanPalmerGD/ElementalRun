@@ -3,8 +3,12 @@ using System.Collections;
 
 public class PlaneMechanics : MonoBehaviour
 {
-	public int jumpsAllowed;
+	public float maxPlaneForwardSpeed = 10;
+	public float maxPlaneBackwardSpeed = 25;
+	public int jumpsAllowed = 2;
+	public float jumpForce = 1200;
+	public float airControlPercentage = .7f;
 
-	public float jumpForce;
-	
+	public float gravityScale = 3;
+	public float resetForce = 1200;
 }

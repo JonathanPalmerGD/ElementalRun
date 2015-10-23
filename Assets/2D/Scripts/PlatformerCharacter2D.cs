@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class PlatformerCharacter2D : MonoBehaviour
 {
-	[SerializeField] private float m_MaxSpeed = 10f;                    // The fastest the player can travel in the x axis.
+	//[SerializeField] private float m_MaxSpeed = 10f;                    // The fastest the player can travel in the x axis.
 	//[SerializeField] private float m_JumpForce = 400f;                  // Amount of force added when the player jumps.
 	[Range(0, 1)] [SerializeField] private float m_CrouchSpeed = .36f;  // Amount of maxSpeed applied to crouching movement. 1 = 100%
 	[SerializeField] private bool m_AirControl = false;                 // Whether or not a player can steer while jumping;
@@ -22,7 +22,7 @@ public class PlatformerCharacter2D : MonoBehaviour
 	private Animator m_Anim;            // Reference to the player's animator component.
 	public Vector2 boxCastSize;
 	public Vector2 boxCastDown; 
-	public Rigidbody2D m_Rigidbody2D;
+	public Rigidbody2D mRigidbody2D;
 	public Collider2D upperBody;
 	public Collider2D lowerBody;
 	public bool flingPlayer;
@@ -36,15 +36,15 @@ public class PlatformerCharacter2D : MonoBehaviour
 		m_GroundCheck = transform.Find("GroundCheck");
 		m_CeilingCheck = transform.Find("CeilingCheck");
 		m_Anim = GetComponent<Animator>();
-		m_Rigidbody2D = GetComponent<Rigidbody2D>();
+		mRigidbody2D = GetComponent<Rigidbody2D>();
 	}
 
 	private void FixedUpdate()
 	{
-		//numJumpsMade = -1;
+		//numJumpsMade = 100;
+		//Collider2D[] colliders;
 
-		Collider2D[] colliders;
-
+		#region Jump through platforms
 		RaycastHit2D[] rayhit = Physics2D.BoxCastAll(m_CeilingCheck.transform.position, boxCastSize, 0, Vector2.up, ceilingDist, m_WhatIsGround);
 		for (int i = 0; i < rayhit.Length; i++)
 		{
@@ -56,7 +56,9 @@ public class PlatformerCharacter2D : MonoBehaviour
 				Physics2D.IgnoreCollision(lowerBody, rayhit[i].collider, true);
 			}
 		}
+		#endregion
 
+		#region Boxcast Floor
 		rayhit = Physics2D.BoxCastAll(m_GroundCheck.transform.position, boxCastDown, 0, Vector2.down, floorDist, m_WhatIsGround);
 		for (int i = 0; i < rayhit.Length; i++)
 		{
@@ -72,8 +74,9 @@ public class PlatformerCharacter2D : MonoBehaviour
 				floor = rayhit[i].collider.gameObject;
 			}
 		}
+		#endregion
 
-
+		#region Old check?
 		// The player is grounded if a circlecast to the groundcheck position hits anything designated as ground
 		// This can be done using layers instead but Sample Assets will not overwrite your project settings.
 		//colliders = Physics2D.OverlapCircleAll(m_GroundCheck.position, k_GroundedRadius, m_WhatIsGround);
@@ -89,23 +92,23 @@ public class PlatformerCharacter2D : MonoBehaviour
 		//		//Runner.Inst.transform.SetParent(floor.transform);
 		//	}
 		//}
-
+		#endregion
 
 		//if (!m_Grounded)
 		if (numJumpsMade > 0)
 		{
-	
 			//Runner.Inst.transform.SetParent(null);
 			floor = null;
 		}
 		m_Anim.SetBool("Ground", numJumpsMade == 0);
 
 		// Set the vertical animation
-		m_Anim.SetFloat("vSpeed", m_Rigidbody2D.velocity.y);
+		m_Anim.SetFloat("vSpeed", mRigidbody2D.velocity.y);
 	}
 
 	public void Move(float move, bool crouch, bool jump, bool forceJump)
 	{
+		#region Crouching
 		// If crouching, check to see if the character can stand up
 		if (!crouch && m_Anim.GetBool("Crouch"))
 		{
@@ -118,12 +121,21 @@ public class PlatformerCharacter2D : MonoBehaviour
 
 		// Set whether or not the character is crouching in the animator
 		m_Anim.SetBool("Crouch", crouch);
+		#endregion
 
+		#region Movement Control
 		//only control the player if grounded or airControl is turned on
 		if (numJumpsMade == 0 || m_AirControl)
 		{
-			// Reduce the speed if crouching by the crouchSpeed multiplier
-			move = (crouch ? move*m_CrouchSpeed : move);
+			if (numJumpsMade == 0)
+			{
+				// Reduce the speed if crouching by the crouchSpeed multiplier
+				move = (crouch ? move * m_CrouchSpeed : move);
+			}
+			else
+			{
+				move = move * Runner.Inst.GetPlaneMechanics().airControlPercentage;
+			}
 
 			float animateSpeed = move;
 			// The Speed animator parameter is set to the absolute value of the horizontal input.
@@ -134,8 +146,17 @@ public class PlatformerCharacter2D : MonoBehaviour
 
 			m_Anim.SetFloat("Speed", Mathf.Abs(animateSpeed));
 
-			// Move the character
-			m_Rigidbody2D.velocity = new Vector2(move * m_MaxSpeed, m_Rigidbody2D.velocity.y);
+			if (move < 0)
+			{
+				// Move the character
+				mRigidbody2D.velocity = new Vector2(move * Runner.Inst.GetPlaneMechanics().maxPlaneBackwardSpeed, mRigidbody2D.velocity.y);
+
+			}
+			else
+			{
+				// Move the character
+				mRigidbody2D.velocity = new Vector2(move * Runner.Inst.GetPlaneMechanics().maxPlaneForwardSpeed, mRigidbody2D.velocity.y);
+			}
 			//m_Rigidbody2D.velocity = new Vector2(move * m_MaxSpeed, m_Rigidbody2D.velocity.y);
 
 			// If the input is moving the player right and the player is facing left...
@@ -151,65 +172,84 @@ public class PlatformerCharacter2D : MonoBehaviour
 				//Flip();
 			}
 		}
-		
+		#endregion
+
+		#region Jumping, Flinging and Force Jumping
+		#region Force Jump and Fling
 		if (forceJump)
 		{
-			m_Rigidbody2D.velocity = new Vector2(0, 4);
+			mRigidbody2D.velocity = new Vector2(0, 4);
 			//m_CanAirJump = true;
-			numJumpsMade = 1;
+			numJumpsMade++;
 			m_Anim.SetBool("Ground", false);
-			m_Rigidbody2D.AddForce(new Vector2(0f, Runner.Inst.GetPlaneMechanics().jumpForce * 1.65f));
+			mRigidbody2D.AddForce(new Vector2(0f, Runner.Inst.GetPlaneMechanics().resetForce));
 		}
 		else if(flingPlayer)
 		{
-			m_Rigidbody2D.velocity = new Vector2(0, 0);
+			mRigidbody2D.velocity = new Vector2(0, 0);
 			//m_CanAirJump = false;
 			if (numJumpsMade < Runner.Inst.GetPlaneMechanics().jumpsAllowed)
 			{
 				numJumpsMade = Runner.Inst.GetPlaneMechanics().jumpsAllowed;
 			}
 			m_Anim.SetBool("Ground", false);
-			m_Rigidbody2D.AddForce(flingDirection * 300);
+			mRigidbody2D.AddForce(flingDirection * 300);
 			flingPlayer = false;
 			flingDirection = Vector2.zero;
 		}
+		#endregion
+		#region Jumping
 		else if (jump)
 		{
 			//if (m_Grounded)
 			//{
 			///	Jump();
 			//}
-			Debug.Log("Attempting to jump\n" + numJumpsMade + " < " + Runner.Inst.GetPlaneMechanics().jumpsAllowed + "  " + (numJumpsMade < Runner.Inst.GetPlaneMechanics().jumpsAllowed) + "\n");
+			//Debug.Log("Attempting to jump\n" + numJumpsMade + " < " + Runner.Inst.GetPlaneMechanics().jumpsAllowed + "  " + (numJumpsMade < Runner.Inst.GetPlaneMechanics().jumpsAllowed) + "\n");
 			if(numJumpsMade < Runner.Inst.GetPlaneMechanics().jumpsAllowed)
 			{
-				if (numJumpsMade > 0)
+				numJumpsMade++;
+
+				if (mRigidbody2D.velocity.y >= 0)
 				{
-					m_Rigidbody2D.velocity = new Vector2(m_Rigidbody2D.velocity.x, 0);
+					//Debug.DrawLine(m_GroundCheck.transform.position, m_GroundCheck.transform.position + (Vector3.down * floorDist), Color.red, 1.0f);
+					mRigidbody2D.velocity = new Vector2(mRigidbody2D.velocity.x, 2);
 				}
+				else
+				{
+					//Debug.DrawLine(m_GroundCheck.transform.position, m_GroundCheck.transform.position + (Vector3.down * floorDist), Color.white, 1.0f);
+					mRigidbody2D.velocity = new Vector2(mRigidbody2D.velocity.x, 0);
+				}
+
+				//if (numJumpsMade > 0)
+				//{
+					//Debug.Log(mRigidbody2D.velocity + "\n");
+					//m_Rigidbody2D.velocity = new Vector2(m_Rigidbody2D.velocity.x, 0);
+					//if (mRigidbody2D.velocity.y > 0)
+					////{
+
+						//Debug.Log("Forcing gravity halt\n");
+
+						//mRigidbody2D.velocity = new Vector2(mRigidbody2D.velocity.x, 0);
+					//}
+				//}
 
 				Jump();
 			}
 		}
-
-		//// If the player should jump...
-		//if (m_Grounded && jump && m_Anim.GetBool("Ground") || forceJump)
-		//{
-		//	// Add a vertical force to the player.
-		//	m_Grounded = false;
-		//	m_Anim.SetBool("Ground", false);
-		//	m_Rigidbody2D.AddForce(new Vector2(0f, m_JumpForce));
-		//}
+		#endregion
+		#endregion
 	}
 
 	private void Jump()
 	{
 		// Add a vertical force to the player.
+		//Debug.Log(Runner.Inst.GetPlaneMechanics().jumpForce + " " + numJumpsMade + "\n");
 
 		numJumpsMade++;
 		m_Anim.SetBool("Ground", false);
-		Debug.Log(Runner.Inst.GetPlaneMechanics().jumpForce);
 		//m_Rigidbody2D.AddForce(new Vector2(0f, 400));
-		m_Rigidbody2D.AddForce(new Vector2(0f, Runner.Inst.GetPlaneMechanics().jumpForce));
+		mRigidbody2D.AddForce(new Vector2(0f, mRigidbody2D.gravityScale * Runner.Inst.GetPlaneMechanics().jumpForce));
 	}
 
 	private void Flip()

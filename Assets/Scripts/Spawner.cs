@@ -72,7 +72,7 @@ public class Spawner : MonoBehaviour
 	private float startingHeight = 5;
 	#endregion
 
-	#region
+	#region Tilt Ranges
 	[Header("Tilt Ranges")]
 	public float tiltMax = 15f;
 	public float tiltMin = -15f;
@@ -188,6 +188,17 @@ public class Spawner : MonoBehaviour
 		float heightVariation = Random.Range(lowerBound, upperBound);
 
 		currentHeight += heightVariation;
+
+		#region Just to be safe - height bounding
+		if (currentHeight < lowestHeight)
+		{
+			currentHeight = lowestHeight;
+		}
+		if (currentHeight > greatestHeight)
+		{
+			currentHeight = greatestHeight;
+		}
+		#endregion
 
 		//Debug.Log("New height is: " + currentHeight + "\n");
 	}

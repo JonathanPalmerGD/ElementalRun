@@ -629,6 +629,9 @@ public class Runner : MonoBehaviour
 			SetCameras();
 
 			StartCoroutine("MicroPause", .1f);
+
+			Debug.Log(targetPlane + " setting gscale to " + GetPlaneMechanics().gravityScale + "\n" + GetPlaneMechanics().name);
+			platChar.mRigidbody2D.gravityScale = GetPlaneMechanics().gravityScale;
 		}
 	}
 
