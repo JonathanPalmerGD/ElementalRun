@@ -72,6 +72,7 @@ public class Runner : MonoBehaviour
 	public Spawner[] Spawners;
 	public PlaneMechanics[] PlaneMechanics;
 	public CameraKick[] Kicks;
+	public Text[] ScoreDisplay;
 	public GameObject[,] Lanes;
 	public int WorldIndex;
 	public int lane;
@@ -139,7 +140,7 @@ public class Runner : MonoBehaviour
 		WorldIndex = 0;
 
 		shiftTimer = ScriptableObject.CreateInstance<AdvancedTimer>();
-		shiftTimer.Init(shiftCooldown,-1, true, 0,0, false, false);
+		shiftTimer.Init(shiftCooldown,0, true, 0,0, false, false);
 
 		healthSlider.maxValue = maxHealth;
 		healthSlider.value = health;
@@ -154,13 +155,12 @@ public class Runner : MonoBehaviour
 		Lanes = new GameObject[4,4];
 
 		Kicks = new CameraKick[4];
+		ScoreDisplay = new Text[4];
 		for(int i = 0; i < Cameras.Length; i++)
 		{
 			Kicks[i] = Cameras[i].GetComponent<CameraKick>();
-			for(int j = 0; j < 4; j++)
-			{
-				//Lanes[i,j] = Cameras[i].transform.FindChild("Lane Parent").FindChild("Lane ["+j+"]").gameObject;
-			}
+
+			ScoreDisplay[i] = Cameras[i].transform.FindChild("Camera Canvas").FindChild("Panel").FindChild("Score Text").GetComponent<Text>();
 		}
 
 		PhaseShift(Random.Range(0, 3));
@@ -185,6 +185,11 @@ public class Runner : MonoBehaviour
 	void Update()
 	{
 		GetInput();
+
+		for (int i = 0; i < ScoreDisplay.Length; i++)
+		{
+			ScoreDisplay[i].text = "" + (int)score[i];
+		}
 
 		#region UpdateSpeed
 		//speedSlider.value = speed;
@@ -254,13 +259,15 @@ public class Runner : MonoBehaviour
 
 	public void GetInput()
 	{
-		//if(Input.GetMouseButtonDown(1))
-		//{
-		//	platController.m_ForceJump = true;
-		//}
+#if !UNITY_EDITOR
+		if (Input.GetKeyDown(KeyCode.Escape))
+		{
+			Application.Quit();
+		}
+#endif
 
 		#region L/R Lane Shifting
-		if (Input.GetKeyDown(KeyCode.UpArrow))
+		if (Input.GetKeyDown(KeyCode.UpArrow) || Input.GetKeyDown(KeyCode.W))
 		{
 			if (!shiftTimer.Running)
 			{
@@ -275,7 +282,7 @@ public class Runner : MonoBehaviour
 				}
 			}
 		}
-		if (Input.GetKeyDown(KeyCode.DownArrow))
+		if (Input.GetKeyDown(KeyCode.DownArrow) || Input.GetKeyDown(KeyCode.S))
 		{
 			if (!shiftTimer.Running)
 			{
@@ -314,33 +321,41 @@ public class Runner : MonoBehaviour
 		#endregion
 
 		#region Plane Control
-		if (Input.GetKeyDown(KeyCode.U))
-		{
-			PhaseShift(0);
-		}
-		if (Input.GetKeyDown(KeyCode.I))
-		{
-			PhaseShift(1);
-		}
-		if (Input.GetKeyDown(KeyCode.O))
-		{
-			PhaseShift(2);
-		}
-		if (Input.GetKeyDown(KeyCode.P))
-		{
-			PhaseShift(3);
-		}
+		//if (Input.GetKeyDown(KeyCode.U))
+		//{
+		//	PhaseShift(0);
+		//}
+		//if (Input.GetKeyDown(KeyCode.I))
+		//{
+		//	PhaseShift(1);
+		//}
+		//if (Input.GetKeyDown(KeyCode.O))
+		//{
+		//	PhaseShift(2);
+		//}
+		//if (Input.GetKeyDown(KeyCode.P))
+		//{
+		//	PhaseShift(3);
+		//}
 		#endregion
 
-		if(Input.GetKeyDown(KeyCode.Tab))
-		{
-			AdjustHealth(-maxHealth / 100);
-		}
+		//if (Input.GetKeyDown(KeyCode.Tab))
+		//{
+		//	AdjustHealth(-maxHealth / 100);
+		//}
+		//if (Input.GetKeyDown(KeyCode.LeftControl))
+		//{
+		//	score[0] += Random.Range(0, 40);
+		//	score[1] += Random.Range(0, 40);
+		//	score[2] += Random.Range(0, 40);
+		//	score[3] += Random.Range(0, 40);
+		//	AdjustHealth(-105);
+		//}
 
-		if (Input.GetKeyDown(KeyCode.Return))
-		{
-			Cameras[WorldIndex].GetComponent<CameraKick>().KickCameraVariation(Vector3.right, 1.0f);
-		}
+		//if (Input.GetKeyDown(KeyCode.Return))
+		//{
+		//	Cameras[WorldIndex].GetComponent<CameraKick>().KickCameraVariation(Vector3.right, 1.0f);
+		//}
 	}
 
 	public void SetCameras()
@@ -357,11 +372,11 @@ public class Runner : MonoBehaviour
 				Cameras[i].orthographicSize = 5;
 			}
 
-			if(i > WorldIndex)
+			if (i > WorldIndex)
 			{
 				Cameras[i].rect = new Rect(Cameras[i].rect.x, yAbove[i], Cameras[i].rect.width, minHeight);
 			}
-			else if(i < WorldIndex)
+			else if (i < WorldIndex)
 			{
 				Cameras[i].rect = new Rect(Cameras[i].rect.x, yBelow[i], Cameras[i].rect.width, minHeight);
 			}
@@ -534,7 +549,7 @@ public class Runner : MonoBehaviour
 
 			if (health <= 0)
 			{
-				Debug.Log("Death!\tScore:\n\t" + score[0] + ", " + score[1] + ", " + score[2] + ", " + score[3] + "\n");
+				Debug.Log("Death!\tScore:\n\t" + (int)score[0] + ", " + (int)score[1] + ", " + (int)score[2] + ", " + (int)score[3] + "\n");
 
 				StartCoroutine("PlayerDeath");
 
@@ -694,6 +709,11 @@ public class Runner : MonoBehaviour
 
 	public IEnumerator PlayerDeath()
 	{
+		PlayerPrefs.SetInt("FireScore", (int)score[0]);
+		PlayerPrefs.SetInt("WaterScore", (int)score[1]);
+		PlayerPrefs.SetInt("EarthScore", (int)score[2]);
+		PlayerPrefs.SetInt("AirScore", (int)score[3]);
+
 		AudioManager.Instance.maxMusicVol = 0;
 		float adjusted = 0.01f;
 		Time.timeScale = adjusted;
@@ -701,7 +721,7 @@ public class Runner : MonoBehaviour
 		Time.timeScale = 1f;
 
 		AudioManager.Instance.maxMusicVol = 1;
-		Application.LoadLevel(Application.loadedLevel);
+		Application.LoadLevel(Application.loadedLevel + 1);
 	}
 
 	public IEnumerator MicroPause(float time)
